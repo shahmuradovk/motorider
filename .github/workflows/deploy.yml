@@ -1,0 +1,23 @@
+name: 🏍️ MotoRide Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔑 Deploy to DigitalOcean
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/motoride
+            git fetch origin main
+            git reset --hard origin/main
+            npm install --production
+            pm2 restart motoride
+            echo "✅ Deployed at $(date)"

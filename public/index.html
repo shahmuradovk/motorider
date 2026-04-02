@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FF6B00">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MotoRide">
+  <meta name="description" content="MotoRide — Motorsiklet sürücüləri üçün icma platforması. Xəritə, gəzintilər, tədbirlər, real-time izləmə.">
+  <title>MotoRide</title>
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <!-- App CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- ══════════════════════════════════════════════════════════
+       LOADING SCREEN
+       ══════════════════════════════════════════════════════════ -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="logo">🏍️</div>
+    <div class="title">MOTORIDE</div>
+    <div class="subtitle">Motorsiklet İcması</div>
+    <div class="spinner"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       APP SHELL
+       ══════════════════════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- ── LOGIN PAGE ────────────────────────────────────────── -->
+    <div id="login-page" class="page auth-page">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <span class="emoji">🏍️</span>
+          <h1>MOTORIDE</h1>
+          <p>Motorsiklet icmasına xoş gəldiniz</p>
+        </div>
+        <div id="login-error" class="auth-error"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="admin@motoride.az" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label>Şifrə</label>
+            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary">Daxil Ol</button>
+        </form>
+        <div class="auth-footer">
+          Hesabınız yoxdur? <a href="#register">Qeydiyyat</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REGISTER PAGE ─────────────────────────────────────── -->
+    <div id="register-page" class="page auth-page">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <span class="emoji">🏍️</span>
+          <h1>MOTORIDE</h1>
+          <p>Yeni hesab yaradın</p>
+        </div>
+        <div id="register-error" class="auth-error"></div>
+        <form id="register-form">
+          <div class="form-group">
+            <label>Ad</label>
+            <input type="text" id="reg-name" placeholder="Adınız" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="reg-email" placeholder="email@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Şifrə</label>
+            <input type="password" id="reg-password" placeholder="Minimum 6 simvol" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label>Yaş</label>
+            <input type="number" id="reg-age" placeholder="25" min="16" max="99">
+          </div>
+          <button type="submit" class="btn btn-primary">Qeydiyyat Ol</button>
+        </form>
+        <div class="auth-footer">
+          Hesabınız var? <a href="#login">Daxil ol</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DRAWER OVERLAY ────────────────────────────────────── -->
+    <div id="drawer-overlay" class="drawer-overlay"></div>
+
+    <!-- ── DRAWER PANEL ──────────────────────────────────────── -->
+    <nav id="drawer" class="drawer">
+      <div class="drawer-header">
+        <div class="drawer-avatar" id="drawer-avatar">?</div>
+        <div class="drawer-user-info">
+          <div class="drawer-user-name" id="drawer-user-name">İstifadəçi</div>
+          <div class="drawer-user-bike" id="drawer-user-bike">🏍️ Sürücü</div>
+        </div>
+      </div>
+      <div class="drawer-divider"></div>
+      <div class="drawer-nav">
+        <div class="drawer-item active" data-page="map">
+          <div class="drawer-item-icon" style="color:#FF6B00">🗺️</div>
+          <span class="drawer-item-label">Xəritə</span>
+        </div>
+        <div class="drawer-item" data-page="rides">
+          <div class="drawer-item-icon" style="color:#00C853">📡</div>
+          <span class="drawer-item-label">Gəzintilər</span>
+        </div>
+        <div class="drawer-item" data-page="track">
+          <div class="drawer-item-icon" style="color:#2979FF">⚡</div>
+          <span class="drawer-item-label">İzləmə</span>
+        </div>
+        <div class="drawer-item" data-page="events">
+          <div class="drawer-item-icon" style="color:#AA00FF">📅</div>
+          <span class="drawer-item-label">Tədbirlər</span>
+        </div>
+        <div class="drawer-item" data-page="profile">
+          <div class="drawer-item-icon" style="color:#FF4081">👤</div>
+          <span class="drawer-item-label">Profil</span>
+        </div>
+      </div>
+      <div class="drawer-divider"></div>
+      <div class="drawer-logout">
+        <div class="drawer-item" id="btn-logout">
+          <div class="drawer-item-icon">🚪</div>
+          <span class="drawer-item-label">Çıxış</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ── DRAWER TAB ────────────────────────────────────────── -->
+    <div id="drawer-tab" class="drawer-tab hidden">
+      <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+    </div>
+
+    <!-- ── MAP PAGE ──────────────────────────────────────────── -->
+    <div id="map-page" class="page">
+      <div class="main-layout">
+        <div class="map-container">
+          <div id="map"></div>
+
+          <!-- Live badge -->
+          <div id="live-badge" class="live-badge">
+            <span class="pulse"></span>
+            Live
+          </div>
+
+          <!-- Status bar -->
+          <div id="status-bar" class="status-bar">
+            <input type="text" id="status-input" placeholder="Status yaz...">
+            <button id="btn-send-status">➤</button>
+          </div>
+
+          <!-- Map controls (right) -->
+          <div class="map-controls">
+            <button class="map-btn" id="btn-location" title="Lokasiya paylaş">📍</button>
+            <button class="map-btn" id="btn-status" title="Status yaz">💬</button>
+            <div class="map-badge">
+              <span class="dot"></span>
+              <span id="riders-count">0</span>
+            </div>
+          </div>
+
+          <!-- Zoom controls (bottom right) -->
+          <div class="zoom-controls">
+            <button class="map-btn" id="btn-zoom-in">+</button>
+            <button class="map-btn" id="btn-zoom-out">−</button>
+            <button class="map-btn" id="btn-my-location" title="Məni tap">⊕</button>
+          </div>
+
+          <!-- Riders bar (bottom) -->
+          <div id="riders-bar" class="riders-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIDES PAGE ────────────────────────────────────────── -->
+    <div id="rides-page" class="page content-page">
+      <div class="content-header">Gəzintilər</div>
+      <div class="cards-grid" id="rides-grid">
+        <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">Yüklənir...</div>
+      </div>
+      <button class="fab" onclick="showToast('Tezliklə…','success')">+</button>
+    </div>
+
+    <!-- ── TRACK PAGE ────────────────────────────────────────── -->
+    <div id="track-page" class="page content-page">
+      <div class="content-header">İzləmə</div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100% - 60px);gap:16px;padding:20px;text-align:center">
+        <div style="font-size:64px">📊</div>
+        <h3 style="color:var(--text-secondary)">Sürüş İzləmə</h3>
+        <p style="color:var(--text-muted);max-width:300px">Sürüşünüzü başlatmaq üçün xəritədən lokasiya paylaşmağı aktiv edin. Məsafə, sürət və marşrut avtomatik qeyd olunacaq.</p>
+        <button class="btn btn-primary" style="max-width:200px" onclick="navigate('map')">🗺️ Xəritəyə Keç</button>
+      </div>
+    </div>
+
+    <!-- ── EVENTS PAGE ───────────────────────────────────────── -->
+    <div id="events-page" class="page content-page">
+      <div class="content-header">Tədbirlər</div>
+      <div class="cards-grid" id="events-grid">
+        <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">Yüklənir...</div>
+      </div>
+      <button class="fab" onclick="showToast('Tezliklə…','success')">+</button>
+    </div>
+
+    <!-- ── PROFILE PAGE ──────────────────────────────────────── -->
+    <div id="profile-page" class="page content-page">
+      <div class="content-header">Profil</div>
+      <div class="profile-hero">
+        <div class="profile-avatar" id="profile-avatar">?</div>
+        <div class="profile-name" id="profile-name">—</div>
+        <span class="profile-role" id="profile-role">🏍️ Sürücü</span>
+        <p class="profile-bio" id="profile-bio">MotoRide üzvü</p>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-title">Motosiklet</div>
+        <div class="profile-bike-card">
+          <div class="profile-bike-icon">🏍️</div>
+          <div>
+            <div class="profile-bike-name" id="profile-bike-name">—</div>
+            <div class="profile-bike-detail" id="profile-bike-detail">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-title">Statistika</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">0.0</div>
+            <div class="stat-unit">km</div>
+            <div class="stat-label">Bugün</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">0.0</div>
+            <div class="stat-unit">km</div>
+            <div class="stat-label">Bu Ay</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--success)">0.0</div>
+            <div class="stat-unit">km</div>
+            <div class="stat-label">Ümumi</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-title">Hesab</div>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-item-label"><span class="icon">📧</span> Email</span>
+            <span class="info-item-value" id="profile-email">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-item-label"><span class="icon">🎂</span> Yaş</span>
+            <span class="info-item-value" id="profile-age">—</span>
+          </div>
+          <div class="info-item">
+            <span class="info-item-label"><span class="icon">📏</span> Ümumi KM</span>
+            <span class="info-item-value" id="profile-km">0 km</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TOAST
+       ══════════════════════════════════════════════════════════ -->
+  <div id="toast" class="toast"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCRIPTS
+       ══════════════════════════════════════════════════════════ -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/map.js"></script>
+</body>
+</html>
