@@ -891,51 +891,361 @@ input, textarea { font-family: var(--font); }
 .toast.error { border-color: rgba(255, 64, 129, 0.3); color: var(--danger); }
 
 /* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE — All Devices
    ═══════════════════════════════════════════════════════════════ */
 
-/* Tablet & up */
-@media (min-width: 768px) {
+/* ── Very Small Phones (320px - 380px) — iPhone SE, Galaxy S Mini ─ */
+@media (max-width: 380px) {
+  .auth-card {
+    padding: 24px 16px;
+    border-radius: var(--radius);
+  }
+  .auth-logo h1 { font-size: 22px; }
+  .auth-logo .emoji { font-size: 36px; }
+  .auth-logo p { font-size: 12px; }
+  .form-group label { font-size: 11px; }
+  .form-group input { padding: 11px 12px; font-size: 14px; }
+  .btn { padding: 12px 18px; font-size: 14px; }
+
+  .drawer { width: 240px; }
+  .drawer-header { padding: 24px 14px 12px; gap: 10px; }
+  .drawer-avatar { width: 40px; height: 40px; font-size: 18px; }
+  .drawer-user-name { font-size: 14px; }
+  .drawer-item { padding: 10px 12px; gap: 10px; }
+  .drawer-item-icon { width: 32px; height: 32px; font-size: 15px; }
+  .drawer-item-label { font-size: 13px; }
+
+  .content-header { font-size: 16px; padding: 14px 16px 12px; }
+  .cards-grid { padding: 10px; gap: 10px; }
+  .content-card { padding: 12px; }
+  .broadcast-card-title { font-size: 14px; }
+  .event-card-title { font-size: 14px; }
+
+  .profile-avatar { width: 60px; height: 60px; font-size: 28px; }
+  .profile-name { font-size: 18px; }
+  .profile-hero { padding: 24px 16px 16px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-value { font-size: 18px; }
+  .stat-card { padding: 10px; }
+  .info-item { padding: 10px 12px; }
+  .info-item-label { font-size: 13px; }
+  .info-item-value { font-size: 13px; }
+  .profile-section { padding: 0 10px 16px; }
+
+  .map-btn { width: 36px; height: 36px; font-size: 15px; }
+  .map-badge { padding: 4px 8px; font-size: 11px; }
+  .fab { width: 44px; height: 44px; font-size: 20px; bottom: 14px; right: 14px; }
+
+  .toast { font-size: 12px; padding: 10px 18px; }
+}
+
+/* ── Normal Phones (380px - 480px) — iPhone 12/13/14/15, Pixel ─── */
+@media (min-width: 381px) and (max-width: 480px) {
+  .auth-card { padding: 32px 24px; }
+  .drawer { width: 260px; }
+  .cards-grid { padding: 12px; gap: 10px; }
+  .content-header { font-size: 17px; }
+  .profile-hero { padding: 32px 20px 16px; }
+  .profile-section { padding: 0 12px 18px; }
+  .map-btn { width: 40px; height: 40px; font-size: 16px; }
+}
+
+/* ── Large Phones (480px - 600px) — iPhone Plus/Max, Galaxy Ultra ─ */
+@media (min-width: 481px) and (max-width: 600px) {
+  .auth-card { padding: 36px 28px; max-width: 400px; }
+  .drawer { width: 280px; }
+  .cards-grid { padding: 14px; gap: 12px; }
+  .profile-hero { padding: 36px 20px 18px; }
+}
+
+/* ── Small Tablets (600px - 768px) — iPad Mini, Galaxy Tab ──────── */
+@media (min-width: 601px) and (max-width: 768px) {
+  .auth-card { padding: 40px 36px; max-width: 440px; }
+  .drawer { width: 300px; }
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 16px;
+    gap: 14px;
+  }
+  .content-header { font-size: 18px; padding: 18px 20px 14px; }
+  .profile-hero { padding: 40px 20px 20px; }
+  .stats-grid { max-width: 400px; margin: 0 auto; }
+  .profile-section { max-width: 500px; margin: 0 auto; padding: 0 16px 20px; }
+  .info-list { max-width: 500px; margin: 0 auto; }
+}
+
+/* ── Tablets (768px - 1024px) — iPad, Galaxy Tab S ──────────────── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root { --drawer-width: 300px; }
+  .auth-card { padding: 48px 40px; max-width: 460px; }
+
   .cards-grid {
     grid-template-columns: repeat(2, 1fr);
     padding: 20px;
     gap: 16px;
+    max-width: 800px;
+    margin: 0 auto;
   }
-  .auth-card { padding: 48px 40px; }
-  .profile-hero { padding: 48px 20px 24px; }
+  .content-header { font-size: 20px; padding: 20px 24px 16px; }
+
+  .profile-hero { padding: 48px 20px 24px; max-width: 600px; margin: 0 auto; }
   .stats-grid { max-width: 500px; margin: 0 auto; }
+  .profile-section { max-width: 600px; margin: 0 auto; padding: 0 20px 24px; }
+
+  .content-card { padding: 18px; }
+  .broadcast-card-title { font-size: 17px; }
+  .event-card-title { font-size: 17px; }
 }
 
-/* Desktop */
-@media (min-width: 1024px) {
+/* ── Laptops & Desktop (1024px - 1440px) ────────────────────────── */
+@media (min-width: 1025px) and (max-width: 1440px) {
   :root { --drawer-width: 300px; }
+  .auth-card { padding: 48px 44px; max-width: 480px; }
+
   .cards-grid {
     grid-template-columns: repeat(3, 1fr);
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 24px;
+    gap: 16px;
   }
-  .profile-section { max-width: 600px; margin: 0 auto; padding: 0 20px 24px; }
-  .profile-hero { max-width: 600px; margin: 0 auto; }
-  .content-card { padding: 20px; }
+  .content-header {
+    font-size: 20px;
+    padding: 22px 24px 18px;
+    max-width: 1100px;
+    margin: 0 auto;
+    text-align: left;
+    padding-left: 40px;
+  }
+
+  .content-card {
+    padding: 20px;
+    transition: all 0.2s ease;
+  }
+  .content-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+
+  .profile-section { max-width: 650px; margin: 0 auto; padding: 0 24px 24px; }
+  .profile-hero { max-width: 650px; margin: 0 auto; padding: 48px 20px 24px; }
+  .stats-grid { max-width: 550px; margin: 0 auto; }
+
+  /* Desktop map controls bigger */
+  .map-btn { width: 44px; height: 44px; font-size: 19px; }
+  .map-badge { padding: 8px 14px; font-size: 13px; }
+
+  .drawer-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(4px);
+  }
 }
 
-/* Small phones */
-@media (max-width: 380px) {
-  .auth-card { padding: 28px 20px; }
-  .auth-logo h1 { font-size: 24px; }
-  .form-group input { padding: 12px 14px; font-size: 14px; }
-  .btn-primary { padding: 12px 20px; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+/* ── Large Desktop (1440px+) — Full HD, 2K, 4K ──────────────────── */
+@media (min-width: 1441px) {
+  :root { --drawer-width: 320px; }
+  .auth-card { padding: 56px 48px; max-width: 500px; }
+  .auth-logo h1 { font-size: 32px; }
+  .auth-logo .emoji { font-size: 56px; }
+
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+    gap: 20px;
+  }
+  .content-header {
+    font-size: 22px;
+    padding: 24px 32px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    text-align: left;
+    padding-left: 48px;
+  }
+  .content-card { padding: 24px; }
+  .broadcast-card-title { font-size: 18px; }
+  .broadcast-card-desc { font-size: 14px; }
+  .event-card-title { font-size: 18px; }
+  .event-card-desc { font-size: 14px; }
+
+  .profile-section { max-width: 750px; margin: 0 auto; padding: 0 32px 28px; }
+  .profile-hero {
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 56px 20px 28px;
+  }
+  .profile-avatar { width: 100px; height: 100px; font-size: 44px; }
+  .profile-name { font-size: 26px; }
+  .stats-grid { max-width: 600px; margin: 0 auto; }
+  .stat-value { font-size: 26px; }
+  .stat-card { padding: 18px; }
+
+  .map-btn { width: 48px; height: 48px; font-size: 20px; border-radius: 16px; }
+  .map-badge { padding: 8px 16px; font-size: 14px; }
+  .fab { width: 58px; height: 58px; font-size: 26px; }
 }
 
-/* Safe area for notched phones */
+/* ── 4K Displays (2560px+) ──────────────────────────────────────── */
+@media (min-width: 2560px) {
+  .cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 2000px;
+    gap: 24px;
+    padding: 40px;
+  }
+  .content-header { max-width: 2000px; font-size: 24px; }
+  .auth-card { max-width: 560px; padding: 64px 52px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LANDSCAPE ORIENTATION — Phone Landscape Fix
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .auth-page { padding: 10px; }
+  .auth-card {
+    padding: 16px 24px;
+    max-width: 380px;
+  }
+  .auth-logo { margin-bottom: 12px; }
+  .auth-logo .emoji { font-size: 28px; margin-bottom: 4px; }
+  .auth-logo h1 { font-size: 22px; }
+  .auth-logo p { display: none; }
+  .form-group { margin-bottom: 8px; }
+  .form-group input { padding: 10px 12px; }
+  .btn { padding: 10px 20px; }
+  .auth-footer { margin-top: 8px; }
+
+  .loading-screen .logo { font-size: 28px; margin-bottom: 6px; }
+  .loading-screen .title { font-size: 22px; }
+  .loading-screen .subtitle { display: none; }
+  .spinner { width: 24px; height: 24px; margin-top: 12px; }
+
+  .content-header { padding: 10px 16px 8px; font-size: 15px; }
+  .profile-hero { padding: 16px 20px 8px; }
+  .profile-avatar { width: 48px; height: 48px; font-size: 22px; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+
+  .zoom-controls { bottom: 8px; }
+  .fab { bottom: 8px; right: 8px; width: 42px; height: 42px; }
+  .riders-bar { height: 80px; }
+  .rider-card { width: 130px; padding: 8px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOUCH OPTIMIZATION — Mobile-specific Improvements
+   ═══════════════════════════════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  /* Bigger touch targets for mobile */
+  .drawer-item { padding: 14px 16px; min-height: 48px; }
+  .map-btn { min-width: 44px; min-height: 44px; }
+  .btn { min-height: 48px; }
+  .btn-sm { min-height: 36px; padding: 8px 16px; }
+  .form-group input { min-height: 48px; font-size: 16px; }  /* prevent iOS zoom */
+  .info-item { min-height: 48px; }
+
+  /* Remove hover effects on mobile */
+  .content-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .drawer-item:hover {
+    transform: none;
+  }
+
+  /* Better scrolling */
+  .content-page {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Active state feedback instead of hover */
+  .content-card:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+  .drawer-item:active {
+    background: rgba(255, 107, 0, 0.15);
+  }
+  .btn-primary:active {
+    transform: scale(0.97);
+  }
+  .map-btn:active {
+    transform: scale(0.9);
+    background: var(--card-hover);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESKTOP-SPECIFIC — Hover & Pointer UX
+   ═══════════════════════════════════════════════════════════════ */
+@media (hover: hover) and (pointer: fine) {
+  /* Smooth hover animations */
+  .content-card {
+    cursor: pointer;
+  }
+  .btn-sm:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+  }
+  .fab:hover {
+    transform: scale(1.12) rotate(90deg);
+    box-shadow: 0 6px 30px var(--primary-glow);
+  }
+  .drawer-tab:hover {
+    width: 34px;
+    box-shadow: 4px 0 20px var(--primary-glow);
+  }
+  /* Scroll indicator for content pages */
+  .content-page::-webkit-scrollbar { width: 8px; }
+  .content-page::-webkit-scrollbar-thumb {
+    background: rgba(255, 107, 0, 0.2);
+    border-radius: 4px;
+  }
+  .content-page::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 107, 0, 0.4);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SAFE AREA — Notched Phones (iPhone X+, Pixel)
+   ═══════════════════════════════════════════════════════════════ */
 @supports (padding: env(safe-area-inset-top)) {
   .content-header { padding-top: calc(env(safe-area-inset-top) + 16px); }
   .map-controls { padding-top: calc(env(safe-area-inset-top) + 12px); }
   .drawer-header { padding-top: calc(env(safe-area-inset-top) + 24px); }
   .live-badge { margin-top: calc(env(safe-area-inset-top) + 12px); }
   .status-bar { margin-top: calc(env(safe-area-inset-top) + 12px); }
+  .content-page { padding-bottom: env(safe-area-inset-bottom, 0); }
+  .fab { bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
+  .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + 30px); }
+  .zoom-controls { bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
+  .riders-bar { padding-bottom: env(safe-area-inset-bottom, 0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HIGH DPI / RETINA — Crisp rendering
+   ═══════════════════════════════════════════════════════════════ */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .content-card,
+  .auth-card,
+  .profile-bike-card,
+  .stat-card,
+  .info-item {
+    border-width: 0.5px;
+  }
+  .drawer-divider { height: 0.5px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PRINT — Clean printing
+   ═══════════════════════════════════════════════════════════════ */
+@media print {
+  .drawer, .drawer-overlay, .drawer-tab, .map-controls,
+  .zoom-controls, .fab, .toast, .loading-screen { display: none !important; }
+  .page { position: static !important; display: block !important; }
+  body { background: white; color: black; overflow: visible; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
