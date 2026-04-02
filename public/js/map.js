@@ -50,22 +50,49 @@ function createMarkerIcon(isSharing) {
   const bg = isSharing ? 'rgba(0,230,118,0.12)' : 'rgba(255,107,0,0.12)';
   const glow = isSharing ? 'rgba(0,230,118,0.6)' : 'rgba(255,107,0,0.6)';
 
-  return L.divIcon({
-    className: 'my-location-marker',
-    html: `<div style="
-      width: 46px; height: 46px;
-      border-radius: 50%;
-      background: ${bg};
-      border: 2px solid ${color};
-      display: flex; align-items: center; justify-content: center;
-      animation: ${isSharing ? 'myPulse 2s infinite' : 'none'};
+  const user = state.user;
+  const name = user?.name || '';
+  const bike = user?.motorcycle ? `${user.motorcycle.brand} ${user.motorcycle.model}` : '';
+  const label = isSharing ? `
+    <div style="
+      position: absolute;
+      top: 52px; left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      text-align: center;
+      pointer-events: none;
     ">
       <div style="
-        width: 16px; height: 16px;
+        background: rgba(0,0,0,0.85);
+        border: 1px solid ${color};
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-family: 'Inter', sans-serif;
+      ">
+        <div style="font-size:12px;font-weight:700;color:white;line-height:1.3">${name}</div>
+        ${bike ? `<div style="font-size:10px;color:${color};line-height:1.3">${bike}</div>` : ''}
+      </div>
+    </div>` : '';
+
+  return L.divIcon({
+    className: 'my-location-marker',
+    html: `<div style="position:relative;">
+      <div style="
+        width: 46px; height: 46px;
         border-radius: 50%;
-        background: ${color};
-        box-shadow: 0 0 12px ${glow};
-      "></div>
+        background: ${bg};
+        border: 2px solid ${color};
+        display: flex; align-items: center; justify-content: center;
+        animation: ${isSharing ? 'myPulse 2s infinite' : 'none'};
+      ">
+        <div style="
+          width: 16px; height: 16px;
+          border-radius: 50%;
+          background: ${color};
+          box-shadow: 0 0 12px ${glow};
+        "></div>
+      </div>
+      ${label}
     </div>`,
     iconSize: [46, 46],
     iconAnchor: [23, 23],
@@ -98,22 +125,46 @@ function updateMyMarker() {
 }
 
 // ── Rider Markers ──────────────────────────────────────────────
-function createRiderIcon(name) {
+function createRiderIcon(name, motorcycle) {
   const initial = (name || '?')[0].toUpperCase();
+  const displayName = name || 'Naməlum';
+  const bike = motorcycle ? `${motorcycle.brand} ${motorcycle.model}` : '';
+
   return L.divIcon({
     className: 'rider-marker',
-    html: `<div style="
-      width: 42px; height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #FF6B00, #FF9800);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 14px rgba(255,107,0,0.5);
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 700;
-      color: white;
-      border: 2px solid rgba(255,255,255,0.2);
-    ">${initial}</div>`,
+    html: `<div style="position:relative;">
+      <div style="
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #FF6B00, #FF9800);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 14px rgba(255,107,0,0.5);
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 700;
+        color: white;
+        border: 2px solid rgba(255,255,255,0.2);
+      ">${initial}</div>
+      <div style="
+        position: absolute;
+        top: 48px; left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        text-align: center;
+        pointer-events: none;
+      ">
+        <div style="
+          background: rgba(0,0,0,0.85);
+          border: 1px solid rgba(255,107,0,0.4);
+          border-radius: 8px;
+          padding: 4px 10px;
+          font-family: 'Inter', sans-serif;
+        ">
+          <div style="font-size:11px;font-weight:700;color:white;line-height:1.3">${displayName}</div>
+          ${bike ? `<div style="font-size:10px;color:#FF9800;line-height:1.3">${bike}</div>` : ''}
+        </div>
+      </div>
+    </div>`,
     iconSize: [42, 42],
     iconAnchor: [21, 21],
   });
@@ -141,11 +192,12 @@ function renderRiders() {
     if (!lat || !lng) return;
 
     if (riderMarkers[id]) {
-      // Smooth move
+      // Smooth move + update icon with latest info
       riderMarkers[id].setLatLng([lat, lng]);
+      riderMarkers[id].setIcon(createRiderIcon(r.name, r.motorcycle));
     } else {
       riderMarkers[id] = L.marker([lat, lng], {
-        icon: createRiderIcon(r.name)
+        icon: createRiderIcon(r.name, r.motorcycle)
       })
         .addTo(state.map)
         .on('click', () => showRiderPopup(r));
