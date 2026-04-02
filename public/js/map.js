@@ -1,13 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════
    MotoRide — Leaflet Map Module
+   Real-time location sharing with background tracking
    ═══════════════════════════════════════════════════════════════ */
 
 let myMarker = null;
 const riderMarkers = {};
-const riderPopups = {};
 
 function initMap() {
-  if (state.map) return;
+  if (state.map) {
+    state.map.invalidateSize();
+    return;
+  }
 
   const defaultCenter = [40.4093, 49.8671]; // Bakı
 
@@ -24,7 +27,7 @@ function initMap() {
     maxZoom: 19,
   }).addTo(state.map);
 
-  // Try get real location
+  // Try get real location on init
   getCurrentLocation().then(pos => {
     if (pos) {
       state.map.setView([pos.lat, pos.lng], 14);
@@ -32,38 +35,54 @@ function initMap() {
     }
   });
 
-  // Render existing riders
+  // Request nearby riders from server
+  if (state.socket) {
+    state.socket.emit('location:get-nearby');
+  }
+
+  // Re-render existing riders
   renderRiders();
 }
 
 // ── My Location Marker ─────────────────────────────────────────
-function addMyMarker(lat, lng) {
-  if (myMarker) {
-    myMarker.setLatLng([lat, lng]);
-    return;
-  }
+function createMarkerIcon(isSharing) {
+  const color = isSharing ? '#00E676' : '#FF6B00';
+  const bg = isSharing ? 'rgba(0,230,118,0.12)' : 'rgba(255,107,0,0.12)';
+  const glow = isSharing ? 'rgba(0,230,118,0.6)' : 'rgba(255,107,0,0.6)';
 
-  const icon = L.divIcon({
+  return L.divIcon({
     className: 'my-location-marker',
     html: `<div style="
       width: 46px; height: 46px;
       border-radius: 50%;
-      background: ${state.isSharingLocation ? 'rgba(0,230,118,0.12)' : 'rgba(255,107,0,0.12)'};
-      border: 2px solid ${state.isSharingLocation ? '#00E676' : '#FF6B00'};
+      background: ${bg};
+      border: 2px solid ${color};
       display: flex; align-items: center; justify-content: center;
+      animation: ${isSharing ? 'myPulse 2s infinite' : 'none'};
     ">
       <div style="
         width: 16px; height: 16px;
         border-radius: 50%;
-        background: ${state.isSharingLocation ? '#00E676' : '#FF6B00'};
-        box-shadow: 0 0 12px ${state.isSharingLocation ? 'rgba(0,230,118,0.6)' : 'rgba(255,107,0,0.6)'};
+        background: ${color};
+        box-shadow: 0 0 12px ${glow};
       "></div>
     </div>`,
     iconSize: [46, 46],
     iconAnchor: [23, 23],
   });
+}
 
-  myMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(state.map);
+function addMyMarker(lat, lng) {
+  if (myMarker) {
+    myMarker.setLatLng([lat, lng]);
+    myMarker.setIcon(createMarkerIcon(state.isSharingLocation));
+    return;
+  }
+
+  myMarker = L.marker([lat, lng], {
+    icon: createMarkerIcon(state.isSharingLocation),
+    zIndexOffset: 1000
+  }).addTo(state.map);
 }
 
 function updateMyMarker() {
@@ -72,29 +91,44 @@ function updateMyMarker() {
 
   if (myMarker) {
     myMarker.setLatLng([lat, lng]);
-    // Update icon style based on sharing state
-    const el = myMarker.getElement();
-    if (el) {
-      const outer = el.querySelector('div > div:first-child') || el.querySelector('div');
-      if (outer) {
-        outer.style.borderColor = state.isSharingLocation ? '#00E676' : '#FF6B00';
-        outer.style.background = state.isSharingLocation ? 'rgba(0,230,118,0.12)' : 'rgba(255,107,0,0.12)';
-      }
-    }
-  } else {
+    myMarker.setIcon(createMarkerIcon(state.isSharingLocation));
+  } else if (state.map) {
     addMyMarker(lat, lng);
   }
 }
 
 // ── Rider Markers ──────────────────────────────────────────────
+function createRiderIcon(name) {
+  const initial = (name || '?')[0].toUpperCase();
+  return L.divIcon({
+    className: 'rider-marker',
+    html: `<div style="
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF6B00, #FF9800);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 14px rgba(255,107,0,0.5);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.2);
+    ">${initial}</div>`,
+    iconSize: [42, 42],
+    iconAnchor: [21, 21],
+  });
+}
+
 function renderRiders() {
+  if (!state.map) return;
+
   const riders = state.riders;
   const riderIds = Object.keys(riders);
 
   // Remove stale markers
   Object.keys(riderMarkers).forEach(id => {
     if (!riders[id]) {
-      state.map?.removeLayer(riderMarkers[id]);
+      state.map.removeLayer(riderMarkers[id]);
       delete riderMarkers[id];
     }
   });
@@ -107,24 +141,12 @@ function renderRiders() {
     if (!lat || !lng) return;
 
     if (riderMarkers[id]) {
+      // Smooth move
       riderMarkers[id].setLatLng([lat, lng]);
-    } else if (state.map) {
-      const icon = L.divIcon({
-        className: 'rider-marker',
-        html: `<div style="
-          width: 40px; height: 40px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #FF6B00, #FF9800);
-          display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 0 12px rgba(255,107,0,0.4);
-          cursor: pointer;
-          font-size: 18px;
-        ">🏍️</div>`,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
-      });
-
-      riderMarkers[id] = L.marker([lat, lng], { icon })
+    } else {
+      riderMarkers[id] = L.marker([lat, lng], {
+        icon: createRiderIcon(r.name)
+      })
         .addTo(state.map)
         .on('click', () => showRiderPopup(r));
     }
@@ -174,13 +196,14 @@ function focusRider(userId) {
 }
 
 function showRiderPopup(rider) {
+  if (!state.map) return;
   const name = rider.name || 'Naməlum';
   const bike = rider.motorcycle ? `${rider.motorcycle.brand} ${rider.motorcycle.model}` : '';
   const status = rider.location?.status || rider.status || '';
   const lat = rider.location?.lat || rider.lat;
   const lng = rider.location?.lng || rider.lng;
 
-  const popup = L.popup({ className: 'rider-popup', maxWidth: 250 })
+  L.popup({ className: 'rider-popup', maxWidth: 250 })
     .setLatLng([lat, lng])
     .setContent(`
       <div style="background:var(--card);padding:16px;border-radius:12px;min-width:200px;">

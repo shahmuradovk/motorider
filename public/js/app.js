@@ -14,6 +14,7 @@ const state = {
   isSharingLocation: false,
   currentPosition: null,
   watchId: null,
+  locationInterval: null,
 };
 
 const API = '/api';
@@ -86,11 +87,16 @@ async function checkAuth() {
 function connectSocket() {
   if (state.socket || !state.token) return;
 
-  state.socket = io({ auth: { token: state.token }, transports: ['websocket'] });
+  state.socket = io({ auth: { token: state.token }, transports: ['websocket', 'polling'] });
 
   state.socket.on('connect', () => {
     console.log('🔌 Socket connected');
     state.socket.emit('location:get-nearby');
+
+    // If was sharing location, resume
+    if (state.isSharingLocation && state.currentPosition) {
+      emitLocation();
+    }
   });
 
   state.socket.on('location:nearby-riders', (data) => {
@@ -115,6 +121,25 @@ function connectSocket() {
       renderRiders();
     }
   });
+
+  state.socket.on('disconnect', () => {
+    console.log('🔌 Socket disconnected, reconnecting...');
+  });
+
+  state.socket.on('reconnect', () => {
+    console.log('🔌 Socket reconnected');
+    state.socket.emit('location:get-nearby');
+    if (state.isSharingLocation && state.currentPosition) {
+      emitLocation();
+    }
+  });
+
+  // Periodically refresh nearby riders
+  setInterval(() => {
+    if (state.socket?.connected) {
+      state.socket.emit('location:get-nearby');
+    }
+  }, 15000);
 }
 
 // ── Geolocation ────────────────────────────────────────────────
@@ -127,7 +152,7 @@ function getCurrentLocation() {
         resolve(state.currentPosition);
       },
       () => resolve(null),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
   });
 }
@@ -135,38 +160,72 @@ function getCurrentLocation() {
 function startSharingLocation() {
   if (!navigator.geolocation) { showToast('Lokasiya dəstəklənmir', 'error'); return; }
 
+  showToast('Lokasiya alınır...', 'success');
+
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       state.isSharingLocation = true;
       state.currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      localStorage.setItem('motoride_sharing', 'true');
+
+      // Emit to server
       emitLocation();
       updateLocationUI();
+      updateMyMarker();
 
-      // Continuous tracking
+      // Center map on me
+      if (state.map) state.map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+
+      showToast('📍 Lokasiya paylaşılır! Hamı sizi görür', 'success');
+
+      // Start continuous tracking
       state.watchId = navigator.geolocation.watchPosition(
         (p) => {
           state.currentPosition = { lat: p.coords.latitude, lng: p.coords.longitude };
           emitLocation();
           updateMyMarker();
         },
-        () => {},
-        { enableHighAccuracy: true, maximumAge: 5000 }
+        (err) => {
+          console.warn('Watch error:', err.message);
+        },
+        { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
       );
+
+      // Backup: emit location every 10 seconds even if watchPosition doesn't fire
+      state.locationInterval = setInterval(() => {
+        if (state.isSharingLocation && state.currentPosition) {
+          emitLocation();
+        }
+      }, 10000);
     },
-    (err) => { showToast('Lokasiya alına bilmədi: ' + err.message, 'error'); },
-    { enableHighAccuracy: true, timeout: 10000 }
+    (err) => {
+      showToast('Lokasiya alına bilmədi: ' + err.message, 'error');
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
   );
 }
 
 function stopSharingLocation() {
   state.isSharingLocation = false;
-  if (state.watchId) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; }
+  localStorage.removeItem('motoride_sharing');
+
+  if (state.watchId) {
+    navigator.geolocation.clearWatch(state.watchId);
+    state.watchId = null;
+  }
+  if (state.locationInterval) {
+    clearInterval(state.locationInterval);
+    state.locationInterval = null;
+  }
+
   if (state.socket) state.socket.emit('location:stop');
   updateLocationUI();
+  updateMyMarker();
+  showToast('Lokasiya paylaşımı dayandırıldı', 'success');
 }
 
 function emitLocation() {
-  if (state.socket && state.currentPosition) {
+  if (state.socket?.connected && state.currentPosition) {
     state.socket.emit('location:update', {
       lat: state.currentPosition.lat,
       lng: state.currentPosition.lng,
@@ -399,6 +458,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Route
   window.addEventListener('hashchange', handleRoute);
   handleRoute();
+
+  // Auto-resume location sharing if was sharing before
+  if (state.token && localStorage.getItem('motoride_sharing') === 'true') {
+    setTimeout(() => startSharingLocation(), 2000);
+  }
 
   // ── Event Listeners ────────────────────────────────
   // Login form
