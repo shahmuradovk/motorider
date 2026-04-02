@@ -733,6 +733,11 @@ input, textarea { font-family: var(--font); }
 /* ═══════════════════════════════════════════════════════════════
    PROFILE PAGE
    ═══════════════════════════════════════════════════════════════ */
+.profile-wrapper {
+  width: 100%;
+  margin: 0 auto;
+}
+
 .profile-hero {
   text-align: center;
   padding: 40px 20px 20px;
@@ -1024,11 +1029,13 @@ input, textarea { font-family: var(--font); }
     box-shadow: 0 8px 30px rgba(0,0,0,0.3);
   }
 
-  .profile-section { max-width: 800px; margin: 0 auto; padding: 0 40px 24px; }
-  .profile-hero { max-width: 800px; margin: 0 auto; padding: 48px 20px 24px; }
-  .stats-grid { max-width: 680px; margin: 0 auto; }
-  .info-list { max-width: 680px; margin: 0 auto; }
-  .profile-bike-card { max-width: 680px; margin: 0 auto; }
+  .profile-wrapper {
+    max-width: 60%;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .profile-section { padding: 0 0 24px; }
+  .profile-hero { padding: 48px 0 24px; }
 
   /* Desktop map controls bigger */
   .map-btn { width: 44px; height: 44px; font-size: 19px; }
@@ -1064,19 +1071,18 @@ input, textarea { font-family: var(--font); }
   .event-card-title { font-size: 18px; }
   .event-card-desc { font-size: 14px; }
 
-  .profile-section { max-width: 900px; margin: 0 auto; padding: 0 48px 28px; }
-  .profile-hero {
-    max-width: 900px;
+  .profile-wrapper {
+    max-width: 50%;
     margin: 0 auto;
-    padding: 56px 20px 28px;
+    padding: 0 32px;
   }
+  .profile-section { padding: 0 0 28px; }
+  .profile-hero { padding: 56px 0 28px; }
   .profile-avatar { width: 100px; height: 100px; font-size: 44px; }
   .profile-name { font-size: 26px; }
-  .stats-grid { max-width: 750px; margin: 0 auto; gap: 16px; }
+  .stats-grid { gap: 16px; }
   .stat-value { font-size: 26px; }
   .stat-card { padding: 20px; }
-  .info-list { max-width: 750px; margin: 0 auto; }
-  .profile-bike-card { max-width: 750px; margin: 0 auto; }
 
   .map-btn { width: 48px; height: 48px; font-size: 20px; border-radius: 16px; }
   .map-badge { padding: 8px 16px; font-size: 14px; }
