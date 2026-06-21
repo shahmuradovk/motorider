@@ -21,9 +21,9 @@ const MotoStorage = {
 
   // ─── Initialize ────────────────────────────────────────────
   init() {
-    if (!localStorage.getItem(this.KEYS.INITIALIZED)) {
+    // Only seed if storage has never been set up (USERS key doesn't exist)
+    if (localStorage.getItem(this.KEYS.USERS) === null) {
       this._seedDemoData();
-      localStorage.setItem(this.KEYS.INITIALIZED, 'true');
     }
   },
 
