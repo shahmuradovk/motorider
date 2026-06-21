@@ -14,12 +14,17 @@ const MotoAuth = {
 
   // ─── Initialize ────────────────────────────────────────────
   init() {
-    this._bindTabEvents();
-    this._bindLoginEvents();
-    this._bindRegisterEvents();
-    this._bindPasswordToggles();
-    this._bindVerificationInputs();
+    try {
+      this._bindTabEvents();
+      this._bindLoginEvents();
+      this._bindRegisterEvents();
+      this._bindPasswordToggles();
+      this._bindVerificationInputs();
+    } catch (err) {
+      console.error('❌ MotoAuth init xətası:', err);
+    }
 
+    this.clearErrors();
   },
 
   // ═══════════════════════════════════════════════════════════
@@ -137,8 +142,8 @@ const MotoAuth = {
       MotoNotifications.show('Xoş gəldiniz, ' + user.firstName + '! 🏍️', 'success');
 
       // Transition to main app
-      if (typeof MotoApp !== 'undefined' && MotoApp.showMainApp) {
-        MotoApp.showMainApp();
+      if (typeof MotoApp !== 'undefined' && MotoApp.onLogin) {
+        MotoApp.onLogin();
       }
     }, 800);
   },
@@ -151,8 +156,8 @@ const MotoAuth = {
     const nextBtn = document.getElementById('reg-next-btn');
     const prevBtn = document.getElementById('reg-prev-btn');
 
-    nextBtn.addEventListener('click', () => this.nextStep());
-    prevBtn.addEventListener('click', () => this.prevStep());
+    if (nextBtn) nextBtn.addEventListener('click', () => this.nextStep());
+    if (prevBtn) prevBtn.addEventListener('click', () => this.prevStep());
 
     // Password strength
     const passwordInput = document.getElementById('reg-password');
