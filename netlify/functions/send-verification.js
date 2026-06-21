@@ -38,7 +38,7 @@ exports.handler = async (event) => {
           
           <div style="background: linear-gradient(135deg, #ff6b35, #ff3333); padding: 32px; text-align: center;">
             <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 800;">🏍️ MotoRiders</h1>
-            <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 14px;">Bakı Motosiklet İcması</p>
+            <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 14px;">Bakı Moto Birliyi</p>
           </div>
           
           <div style="padding: 32px; text-align: center;">
