@@ -66,7 +66,7 @@ const MotoMap = {
     });
 
     L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
       {
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
@@ -82,13 +82,43 @@ const MotoMap = {
   setupMapControls() {
     const centerBtn = document.getElementById('map-center-btn');
     const layerBtn = document.getElementById('map-layer-btn');
+    const shareBtn = document.getElementById('map-share-toggle');
 
     if (centerBtn) centerBtn.addEventListener('click', () => this.centerOnUser());
     if (layerBtn) layerBtn.addEventListener('click', () => this.toggleMapLayer());
+    if (shareBtn) shareBtn.addEventListener('click', () => this.toggleShareLocation());
   },
 
-  toggleMapLayer() {
-    MotoApp.showToast('Xəritə təbəqəsi tezliklə!', 'info');
+  toggleShareLocation() {
+    const btn = document.getElementById('map-share-toggle');
+    if (this.isSharing) {
+      this.stopSharingLocation();
+      if (btn) btn.classList.remove('active');
+    } else {
+      this.isSharing = true;
+      this.startWatching();
+      this.getCurrentLocation((pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (typeof MotoStorage !== 'undefined') {
+          const user = MotoStorage.getCurrentUser();
+          if (user) {
+            MotoStorage.shareLocation({
+              userId: user.id,
+              name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+              lat, lng,
+              message: '',
+              mode: 'community',
+              timestamp: Date.now(),
+            });
+          }
+        }
+        this.updateUserMarker(lat, lng);
+        this.updateRidersOnline();
+      });
+      if (btn) btn.classList.add('active');
+      MotoApp.showToast('Yeriniz paylaşılır 📍', 'success');
+    }
   },
 
   /* ──────────────────────────────────────────────

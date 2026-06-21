@@ -44,9 +44,9 @@
 
 
 /* ──────────────── Leaflet Override — Tiles & Controls ──────────────── */
-/* Dark map tiles desaturate */
+/* Dark map tiles — no filter, voyager tiles are already clean */
 .leaflet-tile-pane {
-  filter: brightness(0.75) contrast(1.15) saturate(0.6);
+  /* filter removed — tiles are now readable */
 }
 
 /* Attribution */
