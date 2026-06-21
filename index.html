@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="MotoRiders — Bakı motosiklet icması. Birlikdə sürək, birlikdə yaşayaq.">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>MotoRiders — Moto İcması</title>
+
+  <!-- SVG Motorcycle Emoji Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏍️</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet.js -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/map.css">
+  <link rel="stylesheet" href="css/events.css">
+  <link rel="stylesheet" href="css/alerts.css">
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SPLASH SCREEN                               -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="splash-screen" aria-label="Yüklənir">
+      <div class="splash-content">
+        <div class="splash-icon">
+          <svg class="splash-moto-svg" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="44" r="14" stroke="#ff6b35" stroke-width="3" fill="none" class="wheel wheel-back"/>
+            <circle cx="98" cy="44" r="14" stroke="#ff6b35" stroke-width="3" fill="none" class="wheel wheel-front"/>
+            <path d="M22 44 L38 24 L62 20 L78 28 L98 44" stroke="#ff3333" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" class="moto-frame"/>
+            <path d="M38 24 L48 14 L56 14 L62 20" stroke="#ffaa00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" class="moto-handle"/>
+            <ellipse cx="52" cy="26" rx="10" ry="6" fill="#1a1a2e" stroke="#ff6b35" stroke-width="1.5" class="moto-tank"/>
+            <path d="M62 20 L70 18 L78 28" stroke="#ff3333" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <h1 class="splash-title">
+          <span class="splash-moto">Moto</span><span class="splash-riders">Riders</span>
+        </h1>
+        <p class="splash-tagline">Birlikdə sürək, birlikdə yaşayaq</p>
+        <div class="splash-loader">
+          <div class="splash-loader-bar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- AUTH CONTAINER                              -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="auth-container" class="hidden" aria-label="Giriş və Qeydiyyat">
+      <div class="auth-card">
+
+        <!-- Auth Logo -->
+        <div class="auth-logo">
+          <div class="auth-logo-icon">
+            <svg viewBox="0 0 48 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="8" cy="20" r="6.5" stroke="#ff6b35" stroke-width="2" fill="none"/>
+              <circle cx="40" cy="20" r="6.5" stroke="#ff6b35" stroke-width="2" fill="none"/>
+              <path d="M8 20 L16 8 L26 6 L33 11 L40 20" stroke="#ff3333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M16 8 L20 3 L24 3 L26 6" stroke="#ffaa00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <ellipse cx="22" cy="10" rx="5" ry="3" fill="#1a1a2e" stroke="#ff6b35" stroke-width="1"/>
+            </svg>
+          </div>
+          <h1 class="auth-logo-text">
+            <span class="text-gradient-orange">Moto</span><span class="text-gradient-red">Riders</span>
+          </h1>
+          <p class="auth-logo-sub">Bakı Motosiklet İcması</p>
+        </div>
+
+        <!-- Auth Tabs -->
+        <div id="auth-tabs" role="tablist">
+          <button class="auth-tab active" data-tab="login" role="tab" aria-selected="true" aria-controls="login-form">Giriş</button>
+          <button class="auth-tab" data-tab="register" role="tab" aria-selected="false" aria-controls="register-form">Qeydiyyat</button>
+          <div class="auth-tab-indicator"></div>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form" autocomplete="off" aria-label="Giriş forması">
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+              </span>
+              <input type="email" id="login-email" name="login-email" placeholder="email@nümunə.az" required>
+            </div>
+            <span class="field-error" id="login-email-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">Şifrə</label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </span>
+              <input type="password" id="login-password" name="login-password" placeholder="••••••" required>
+              <button type="button" class="toggle-password" aria-label="Şifrəni göstər">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <span class="field-error" id="login-password-error"></span>
+          </div>
+
+          <div class="form-row">
+            <label class="checkbox-wrapper">
+              <input type="checkbox" id="login-remember" checked>
+              <span class="checkbox-custom"></span>
+              <span class="checkbox-label">Məni xatırla</span>
+            </label>
+            <a href="#" class="forgot-link" id="forgot-password-link">Şifrəni unutdun?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+            <span class="btn-text">Daxil ol</span>
+            <span class="btn-loader hidden">
+              <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+            </span>
+          </button>
+
+          <div class="auth-divider">
+            <span>və ya</span>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-full" id="demo-login-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Demo giriş
+          </button>
+        </form>
+
+        <!-- Register Form (Multi-step) -->
+        <form id="register-form" class="auth-form hidden" autocomplete="off" aria-label="Qeydiyyat forması">
+
+          <!-- Step Indicator -->
+          <div class="step-indicator">
+            <div class="step-progress-bar">
+              <div class="step-progress-fill" style="width: 25%"></div>
+            </div>
+            <div class="step-dots">
+              <div class="step-dot active" data-step="1">
+                <span class="step-dot-inner">1</span>
+                <span class="step-dot-label">Şəxsi</span>
+              </div>
+              <div class="step-dot" data-step="2">
+                <span class="step-dot-inner">2</span>
+                <span class="step-dot-label">Moto</span>
+              </div>
+              <div class="step-dot" data-step="3">
+                <span class="step-dot-inner">3</span>
+                <span class="step-dot-label">Əlaqə</span>
+              </div>
+              <div class="step-dot" data-step="4">
+                <span class="step-dot-inner">4</span>
+                <span class="step-dot-label">Təsdiq</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 1: Personal Info -->
+          <div id="reg-step-1" class="reg-step active" data-step="1">
+            <h3 class="step-title">Şəxsi Məlumatlar</h3>
+            <p class="step-desc">Gəlin tanış olaq! Adınızı və doğum tarixinizi daxil edin.</p>
+
+            <div class="form-group">
+              <label for="reg-firstname">Ad</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <input type="text" id="reg-firstname" placeholder="Adınız" required>
+              </div>
+              <span class="field-error" id="reg-firstname-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-lastname">Soyad</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <input type="text" id="reg-lastname" placeholder="Soyadınız" required>
+              </div>
+              <span class="field-error" id="reg-lastname-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-birthdate">Təvəllüd</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+                <input type="date" id="reg-birthdate" required max="2010-01-01" min="1950-01-01">
+              </div>
+              <span class="field-error" id="reg-birthdate-error"></span>
+            </div>
+          </div>
+
+          <!-- Step 2: Motorcycle Info -->
+          <div id="reg-step-2" class="reg-step" data-step="2">
+            <h3 class="step-title">Motosiklet Məlumatları</h3>
+            <p class="step-desc">Dəmir atınız haqqında danışın! 🏍️</p>
+
+            <div class="form-group">
+              <label for="reg-brand">Moto Markası</label>
+              <div class="input-wrapper select-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </span>
+                <select id="reg-brand" required>
+                  <option value="" disabled selected>Marka seçin</option>
+                  <option value="Yamaha">Yamaha</option>
+                  <option value="Honda">Honda</option>
+                  <option value="Kawasaki">Kawasaki</option>
+                  <option value="BMW">BMW</option>
+                  <option value="Ducati">Ducati</option>
+                  <option value="Harley-Davidson">Harley-Davidson</option>
+                  <option value="Suzuki">Suzuki</option>
+                  <option value="KTM">KTM</option>
+                  <option value="Aprilia">Aprilia</option>
+                  <option value="Triumph">Triumph</option>
+                  <option value="Digər">Digər</option>
+                </select>
+              </div>
+              <span class="field-error" id="reg-brand-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-model">Model</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                </span>
+                <input type="text" id="reg-model" placeholder="Model adı (məs. MT-07)" required>
+              </div>
+              <span class="field-error" id="reg-model-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-cc">Kubatur (cc)</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </span>
+                <input type="number" id="reg-cc" placeholder="689" min="50" max="3000" required>
+              </div>
+              <span class="field-error" id="reg-cc-error"></span>
+            </div>
+          </div>
+
+          <!-- Step 3: Contact Info -->
+          <div id="reg-step-3" class="reg-step" data-step="3">
+            <h3 class="step-title">Əlaqə Məlumatları</h3>
+            <p class="step-desc">Hesabınız üçün giriş məlumatlarını təyin edin.</p>
+
+            <div class="form-group">
+              <label for="reg-email">Email</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+                </span>
+                <input type="email" id="reg-email" placeholder="email@nümunə.az" required>
+              </div>
+              <span class="field-error" id="reg-email-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-phone">Telefon</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                </span>
+                <input type="tel" id="reg-phone" placeholder="+994 50 123 45 67" required>
+              </div>
+              <span class="field-error" id="reg-phone-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password">Şifrə</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </span>
+                <input type="password" id="reg-password" placeholder="Minimum 6 simvol" required minlength="6">
+                <button type="button" class="toggle-password" aria-label="Şifrəni göstər">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <div class="password-strength" id="password-strength">
+                <div class="strength-bar"><div class="strength-fill"></div></div>
+                <span class="strength-text"></span>
+              </div>
+              <span class="field-error" id="reg-password-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password-confirm">Şifrə təkrar</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </span>
+                <input type="password" id="reg-password-confirm" placeholder="Şifrəni təkrar daxil edin" required minlength="6">
+              </div>
+              <span class="field-error" id="reg-password-confirm-error"></span>
+            </div>
+          </div>
+
+          <!-- Step 4: Email Verification -->
+          <div id="reg-step-4" class="reg-step" data-step="4">
+            <h3 class="step-title">Email Təsdiqi</h3>
+            <p class="step-desc">Email ünvanınıza göndərilən 6 rəqəmli kodu daxil edin.</p>
+
+            <div class="verification-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M22 4L12 13 2 4"/>
+                <circle cx="18" cy="8" r="3" fill="#ff3333" stroke="#ff3333"/>
+              </svg>
+            </div>
+
+            <p class="verification-email-display" id="verification-email-display"></p>
+
+            <div class="verification-code-inputs" id="verification-code-inputs">
+              <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="0" aria-label="Kod rəqəmi 1" autocomplete="one-time-code">
+              <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="1" aria-label="Kod rəqəmi 2">
+              <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="2" aria-label="Kod rəqəmi 3">
+              <span class="code-separator">—</span>
+              <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="3" aria-label="Kod rəqəmi 4">
+              <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="4" aria-label="Kod rəqəmi 5">
+              <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="5" aria-label="Kod rəqəmi 6">
+            </div>
+            <span class="field-error" id="verification-code-error"></span>
+
+            <div class="resend-section">
+              <button type="button" class="btn-link" id="resend-code-btn" disabled>
+                Kodu yenidən göndər
+              </button>
+              <span class="resend-timer" id="resend-timer"></span>
+            </div>
+          </div>
+
+          <!-- Step Navigation -->
+          <div class="step-navigation">
+            <button type="button" class="btn btn-ghost" id="reg-prev-btn" style="visibility: hidden;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Geri
+            </button>
+            <button type="button" class="btn btn-primary" id="reg-next-btn">
+              İrəli
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        </form>
+
+        <!-- Auth Footer -->
+        <footer class="auth-footer">
+          <div class="auth-footer-stats">
+            <span class="pulse-dot"></span>
+            <span id="member-count">247</span> motosikletçi artıq bizimlə
+          </div>
+        </footer>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- MAIN APP                                    -->
+    <!-- ═══════════════════════════════════════════ -->
+    <main id="main-app" class="hidden" aria-label="Əsas tətbiq">
+
+      <!-- App Header -->
+      <header class="app-header">
+        <div class="header-logo">
+          <span class="header-logo-text">
+            <span class="text-gradient-orange">Moto</span><span class="text-gradient-red">Riders</span>
+          </span>
+        </div>
+        <div class="header-actions">
+          <button class="header-btn notification-btn" id="notification-btn" aria-label="Bildirişlər">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+            <span class="notification-badge hidden" id="notification-badge">0</span>
+          </button>
+          <button class="header-btn profile-avatar-btn" id="header-profile-btn" aria-label="Profil">
+            <div class="avatar avatar-sm" id="header-avatar">
+              <span class="avatar-initials" id="header-avatar-initials">MR</span>
+            </div>
+          </button>
+        </div>
+      </header>
+
+      <!-- Notification Dropdown -->
+      <aside class="notification-dropdown hidden" id="notification-dropdown" aria-label="Bildiriş paneli">
+        <div class="notification-dropdown-header">
+          <h3>Bildirişlər</h3>
+          <button class="btn-link" id="mark-all-read-btn">Hamısını oxunmuş say</button>
+        </div>
+        <div class="notification-dropdown-list" id="notification-list">
+          <div class="notification-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <p>Bildiriş yoxdur</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Pages Container -->
+      <div id="pages-container">
+
+        <!-- PAGE: Map -->
+        <section id="page-map" class="page active" data-page="map" aria-label="Xəritə">
+          <div id="map-container">
+            <div id="leaflet-map"></div>
+          </div>
+
+          <!-- Map Controls -->
+          <div class="map-controls">
+            <button class="map-control-btn" id="map-center-btn" aria-label="Mərkəzə qayıt">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/></svg>
+            </button>
+            <button class="map-control-btn" id="map-layer-btn" aria-label="Xəritə təbəqəsi">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Map FABs -->
+          <div class="map-fab-group">
+            <button class="fab fab-primary" id="fab-live-ride" aria-label="Canlı Sürüş">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span class="fab-label">Canlı Sürüş</span>
+            </button>
+            <button class="fab fab-secondary" id="fab-share-location" aria-label="Haradayam">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="fab-label">Haradayam</span>
+            </button>
+            <button class="fab fab-danger" id="fab-report-danger" aria-label="Təhlükə Bildir">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span class="fab-label">Təhlükə Bildir</span>
+            </button>
+          </div>
+
+          <!-- Map Legend -->
+          <div class="map-legend" id="map-legend">
+            <button class="map-legend-toggle" id="map-legend-toggle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              Rəmzlər
+            </button>
+            <div class="map-legend-content hidden" id="map-legend-content">
+              <div class="legend-item"><span class="legend-dot" style="background:#ff6b35"></span>Sən</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#4ecdc4"></span>Dostlar</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#a855f7"></span>İcma</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#ff3333"></span>Təhlükə</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#ffaa00"></span>Tədbir</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE: Events -->
+        <section id="page-events" class="page" data-page="events" aria-label="Tədbirlər">
+          <div class="page-header">
+            <h2 class="page-title">Tədbirlər</h2>
+            <p class="page-subtitle">Sürüş planları və qrup gəzintiləri</p>
+          </div>
+
+          <!-- Event Filter Tabs -->
+          <div class="filter-tabs" id="event-filter-tabs">
+            <button class="filter-tab active" data-filter="all">Hamısı</button>
+            <button class="filter-tab" data-filter="upcoming">Yaxınlaşan</button>
+            <button class="filter-tab" data-filter="my">Mənim</button>
+            <button class="filter-tab" data-filter="past">Keçmiş</button>
+          </div>
+
+          <!-- Events List -->
+          <div class="events-list" id="events-list">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state hidden" id="events-empty">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <p>Tədbir tapılmadı</p>
+          </div>
+
+          <!-- Create Event FAB -->
+          <button class="fab fab-page-action" id="fab-create-event" aria-label="Tədbir yarat">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </section>
+
+        <!-- PAGE: Alerts -->
+        <section id="page-alerts" class="page" data-page="alerts" aria-label="Xəbərdarlıqlar">
+          <div class="page-header">
+            <h2 class="page-title">Xəbərdarlıqlar</h2>
+            <p class="page-subtitle">Yol təhlükələri və bildirişlər</p>
+          </div>
+
+          <!-- Alert Type Filters -->
+          <div class="filter-tabs" id="alert-filter-tabs">
+            <button class="filter-tab active" data-filter="all">Hamısı</button>
+            <button class="filter-tab" data-filter="accident">🚨 Qəza</button>
+            <button class="filter-tab" data-filter="pothole">🕳️ Çuxur</button>
+            <button class="filter-tab" data-filter="construction">🚧 Təmir</button>
+            <button class="filter-tab" data-filter="police">👮 Polis</button>
+            <button class="filter-tab" data-filter="other">⚠️ Digər</button>
+          </div>
+
+          <!-- Alerts List -->
+          <div class="alerts-list" id="alerts-list">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state hidden" id="alerts-empty">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p>Aktiv xəbərdarlıq yoxdur</p>
+          </div>
+
+          <!-- Create Alert FAB -->
+          <button class="fab fab-page-action fab-danger-action" id="fab-create-alert" aria-label="Xəbərdarlıq yarat">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </section>
+
+        <!-- PAGE: Friends -->
+        <section id="page-friends" class="page" data-page="friends" aria-label="Dostlar">
+          <div class="page-header">
+            <h2 class="page-title">Dostlar</h2>
+            <p class="page-subtitle">Moto yoldaşların</p>
+          </div>
+
+          <!-- Friend Search -->
+          <div class="search-bar" id="friend-search-bar">
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </span>
+              <input type="text" id="friend-search-input" placeholder="Dost axtar...">
+            </div>
+          </div>
+
+          <!-- Friend Requests -->
+          <div class="friend-requests-section" id="friend-requests-section">
+            <h3 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              Dost istəkləri
+              <span class="badge" id="friend-request-count">0</span>
+            </h3>
+            <div class="friend-requests-list" id="friend-requests-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Friends List -->
+          <div class="friends-list-section">
+            <h3 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              Dostlarım
+            </h3>
+            <div class="friends-list" id="friends-list">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- All Users -->
+            <h3 class="section-title" style="margin-top: 1.5rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+              İcma üzvləri
+            </h3>
+            <div class="all-users-list" id="all-users-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE: Profile -->
+        <section id="page-profile" class="page" data-page="profile" aria-label="Profil">
+          <div class="profile-hero">
+            <div class="profile-cover"></div>
+            <div class="profile-avatar-large">
+              <div class="avatar avatar-xl" id="profile-avatar">
+                <span class="avatar-initials" id="profile-avatar-initials">MR</span>
+              </div>
+              <span class="online-indicator"></span>
+            </div>
+            <h2 class="profile-name" id="profile-name">MotoRider</h2>
+            <p class="profile-bike" id="profile-bike">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span id="profile-bike-text">—</span>
+            </p>
+            <p class="profile-email" id="profile-email"></p>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="stats-grid" id="profile-stats">
+            <div class="stat-card">
+              <span class="stat-value" id="stat-rides">0</span>
+              <span class="stat-label">Sürüş</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="stat-km">0</span>
+              <span class="stat-label">km</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="stat-events">0</span>
+              <span class="stat-label">Tədbir</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="stat-friends">0</span>
+              <span class="stat-label">Dost</span>
+            </div>
+          </div>
+
+          <!-- Ride History -->
+          <div class="profile-section">
+            <h3 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Sürüş Tarixçəsi
+            </h3>
+            <div class="ride-history-list" id="ride-history-list">
+              <div class="empty-state-inline">
+                <p>Hələ sürüş tarixçəniz yoxdur</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="profile-section">
+            <h3 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              Parametrlər
+            </h3>
+            <div class="settings-list">
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Bildirişlər</span>
+                  <span class="setting-desc">Push bildirişlərini al</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-notifications" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Məkan paylaşımı</span>
+                  <span class="setting-desc">Dostlarla məkanını paylaş</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-location" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Qaranlıq rejim</span>
+                  <span class="setting-desc">Həmişə qaranlıq tema</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-darkmode" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Səs effektləri</span>
+                  <span class="setting-desc">Bildiriş səsləri</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setting-sounds" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logout -->
+          <div class="profile-section">
+            <button class="btn btn-danger btn-full" id="logout-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Çıxış
+            </button>
+            <p class="app-version">MotoRiders v1.0.0 — Bakı, Azərbaycan 🇦🇿</p>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Bottom Navigation -->
+      <nav class="bottom-nav" aria-label="Əsas naviqasiya">
+        <button class="nav-item active" data-page="map" aria-label="Xəritə">
+          <svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          <span class="nav-label">Xəritə</span>
+        </button>
+        <button class="nav-item" data-page="friends" aria-label="Dostlar">
+          <svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span class="nav-label">Dostlar</span>
+        </button>
+        <button class="nav-item" data-page="events" aria-label="Tədbirlər">
+          <svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+          <span class="nav-label">Tədbirlər</span>
+        </button>
+        <button class="nav-item" data-page="alerts" aria-label="Xəbərdarlıqlar">
+          <svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="nav-label">Xəbərdarlıq</span>
+          <span class="nav-badge hidden" id="alerts-nav-badge">0</span>
+        </button>
+        <button class="nav-item" data-page="profile" aria-label="Profil">
+          <svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="nav-label">Profil</span>
+        </button>
+      </nav>
+
+    </main>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- MODALS & OVERLAYS                           -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <!-- Reusable Modal Container -->
+  <div id="modal-container" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title"></h3>
+        <button class="modal-close" id="modal-close-btn" aria-label="Bağla">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Share Mode Modal -->
+  <div class="share-mode-modal modal-overlay hidden" id="share-mode-modal">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">Məkanı paylaş</h3>
+        <button class="modal-close share-mode-close" aria-label="Bağla">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="share-mode-desc">Kim görsün?</p>
+        <div class="share-mode-options">
+          <button class="share-mode-option" data-share="friends">
+            <div class="share-mode-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <span class="share-mode-label">Dostlar</span>
+            <span class="share-mode-sub">Yalnız dostlarım görsün</span>
+          </button>
+          <button class="share-mode-option" data-share="community">
+            <div class="share-mode-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            </div>
+            <span class="share-mode-label">İcma</span>
+            <span class="share-mode-sub">Bütün icma görsün</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Riding Panel -->
+  <div class="riding-panel hidden" id="riding-panel">
+    <div class="riding-panel-header">
+      <div class="riding-status">
+        <span class="riding-pulse"></span>
+        <span class="riding-status-text">Canlı Sürüş</span>
+      </div>
+      <button class="btn btn-sm btn-danger" id="stop-riding-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        Dayandır
+      </button>
+    </div>
+    <div class="riding-stats">
+      <div class="riding-stat">
+        <span class="riding-stat-value" id="riding-distance">0.0</span>
+        <span class="riding-stat-unit">km</span>
+        <span class="riding-stat-label">Məsafə</span>
+      </div>
+      <div class="riding-stat-divider"></div>
+      <div class="riding-stat">
+        <span class="riding-stat-value" id="riding-time">00:00</span>
+        <span class="riding-stat-unit"></span>
+        <span class="riding-stat-label">Vaxt</span>
+      </div>
+      <div class="riding-stat-divider"></div>
+      <div class="riding-stat">
+        <span class="riding-stat-value" id="riding-speed">0</span>
+        <span class="riding-stat-unit">km/s</span>
+        <span class="riding-stat-label">Sürət</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Share Panel -->
+  <div class="location-share-panel hidden" id="location-share-panel">
+    <div class="location-share-header">
+      <h3>📍 Məkanını paylaş</h3>
+      <button class="modal-close" id="close-location-share" aria-label="Bağla">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="location-share-body">
+      <div class="form-group">
+        <label for="location-message">Mesaj (isteğe bağlı)</label>
+        <div class="input-wrapper">
+          <input type="text" id="location-message" placeholder="Məs. Burada qəhvə içirəm ☕" maxlength="100">
+        </div>
+      </div>
+      <div class="location-share-info">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span id="location-share-coords">Koordinatlar yüklənir...</span>
+      </div>
+      <div class="location-share-actions">
+        <button class="btn btn-ghost" id="cancel-location-share">Ləğv et</button>
+        <button class="btn btn-primary" id="confirm-location-share">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Paylaş
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Create Modal -->
+  <div class="event-create-modal modal-overlay hidden" id="event-create-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🏍️ Yeni Tədbir</h3>
+        <button class="modal-close" id="close-event-create" aria-label="Bağla">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="event-create-form">
+          <div class="form-group">
+            <label for="event-title">Tədbir adı</label>
+            <div class="input-wrapper">
+              <input type="text" id="event-title" placeholder="Məs. Axşam sürüşü" required maxlength="60">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="event-description">Təsvir</label>
+            <div class="input-wrapper">
+              <textarea id="event-description" placeholder="Marşrut, qaydalar, və s." rows="3" maxlength="300"></textarea>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="event-date">Tarix</label>
+              <div class="input-wrapper">
+                <input type="date" id="event-date" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="event-time">Saat</label>
+              <div class="input-wrapper">
+                <input type="time" id="event-time" required>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="event-start-location">Başlanğıc nöqtəsi</label>
+            <div class="input-wrapper">
+              <input type="text" id="event-start-location" placeholder="Məs. 28 May metro" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="event-end-location">Son nöqtə</label>
+            <div class="input-wrapper">
+              <input type="text" id="event-end-location" placeholder="Məs. Mərdəkan çimərliyi">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="event-max-riders">Maksimum iştirakçı</label>
+            <div class="input-wrapper">
+              <input type="number" id="event-max-riders" placeholder="0 = limitsiz" min="0" max="100" value="0">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="cancel-event-create">Ləğv et</button>
+        <button class="btn btn-primary" id="submit-event-create">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Yarat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Create Modal -->
+  <div class="alert-create-modal modal-overlay hidden" id="alert-create-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">⚠️ Təhlükə Bildir</h3>
+        <button class="modal-close" id="close-alert-create" aria-label="Bağla">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="alert-create-form">
+          <div class="form-group">
+            <label>Təhlükə növü</label>
+            <div class="alert-type-grid">
+              <label class="alert-type-option">
+                <input type="radio" name="alert-type" value="accident" required>
+                <span class="alert-type-card">
+                  <span class="alert-type-emoji">🚨</span>
+                  <span class="alert-type-name">Qəza</span>
+                </span>
+              </label>
+              <label class="alert-type-option">
+                <input type="radio" name="alert-type" value="pothole">
+                <span class="alert-type-card">
+                  <span class="alert-type-emoji">🕳️</span>
+                  <span class="alert-type-name">Çuxur</span>
+                </span>
+              </label>
+              <label class="alert-type-option">
+                <input type="radio" name="alert-type" value="construction">
+                <span class="alert-type-card">
+                  <span class="alert-type-emoji">🚧</span>
+                  <span class="alert-type-name">Yol təmiri</span>
+                </span>
+              </label>
+              <label class="alert-type-option">
+                <input type="radio" name="alert-type" value="police">
+                <span class="alert-type-card">
+                  <span class="alert-type-emoji">👮</span>
+                  <span class="alert-type-name">Polis</span>
+                </span>
+              </label>
+              <label class="alert-type-option">
+                <input type="radio" name="alert-type" value="oil">
+                <span class="alert-type-card">
+                  <span class="alert-type-emoji">🛢️</span>
+                  <span class="alert-type-name">Yağ ləkəsi</span>
+                </span>
+              </label>
+              <label class="alert-type-option">
+                <input type="radio" name="alert-type" value="other">
+                <span class="alert-type-card">
+                  <span class="alert-type-emoji">⚠️</span>
+                  <span class="alert-type-name">Digər</span>
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="alert-title">Başlıq</label>
+            <div class="input-wrapper">
+              <input type="text" id="alert-title" placeholder="Qısa təsvir" required maxlength="60">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="alert-description">Ətraflı məlumat</label>
+            <div class="input-wrapper">
+              <textarea id="alert-description" placeholder="Daha çox detallar..." rows="2" maxlength="200"></textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="alert-location-text">Ünvan / Məkan</label>
+            <div class="input-wrapper">
+              <input type="text" id="alert-location-text" placeholder="Məs. Nərimanov metrosu yaxınlığı" required>
+            </div>
+          </div>
+          <label class="checkbox-wrapper" style="margin-top: 0.5rem;">
+            <input type="checkbox" id="alert-use-current-location" checked>
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-label">Cari məkanımı istifadə et</span>
+          </label>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="cancel-alert-create">Ləğv et</button>
+        <button class="btn btn-danger" id="submit-alert-create">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Bildir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SCRIPTS                                     -->
+  <!-- ═══════════════════════════════════════════ -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/alerts.js"></script>
+  <script src="js/friends.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

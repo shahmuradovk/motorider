@@ -1,0 +1,15 @@
+{
+  "name": "motoride-app",
+  "version": "1.0.0",
+  "description": "MotoRiders - Baku Motorcycle Community App",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
