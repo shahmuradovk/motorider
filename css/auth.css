@@ -4,7 +4,7 @@
    ============================================================ */
 
 /* ──────────────── Auth Container ──────────────── */
-.auth-container {
+#auth-container {
   position: relative;
   display: flex;
   align-items: center;
@@ -16,7 +16,7 @@
 }
 
 /* Animated gradient background */
-.auth-container::before {
+#auth-container::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -44,7 +44,7 @@
 }
 
 /* ── Decorative Particles ── */
-.auth-container::after {
+#auth-container::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -1199,7 +1199,7 @@
 
 /* ──────────────── Auth Page Responsive ──────────────── */
 @media (max-width: 480px) {
-  .auth-container {
+  #auth-container {
     padding: var(--space-3);
     align-items: flex-start;
     padding-top: 10vh;
@@ -1253,7 +1253,7 @@
 }
 
 @media (min-height: 800px) {
-  .auth-container {
+  #auth-container {
     padding-top: 0;
     align-items: center;
   }
