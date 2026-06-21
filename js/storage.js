@@ -16,39 +16,196 @@ const MotoStorage = {
     FRIENDS: 'moto_friends',
     MESSAGES: 'moto_messages',
     SETTINGS: 'moto_settings',
-    INITIALIZED: 'moto_initialized'
+    SCHEMA_VERSION: 'moto_schema_version'
   },
 
-  init() {
-    // ── Auto-migration: clean up old flags ──
-    localStorage.removeItem('moto_initialized');
+  // Current schema version — increment when adding migrations
+  CURRENT_SCHEMA_VERSION: 2,
 
-    // Detect corrupted state: users key exists but is empty + no session
-    const rawUsers = localStorage.getItem(this.KEYS.USERS);
-    if (rawUsers !== null) {
-      try {
-        const parsed = JSON.parse(rawUsers);
-        if (Array.isArray(parsed) && parsed.length === 0 && !localStorage.getItem(this.KEYS.CURRENT_USER)) {
-          // Empty users with no session = fresh state, ensure other keys exist
-          this._seedDemoData();
+  // ─── Default field values for user schema ──────────────────
+  USER_DEFAULTS: {
+    firstName: '',
+    lastName: '',
+    birthdate: null,
+    email: '',
+    phone: '',
+    password: '',
+    motoBrand: '',
+    motoModel: '',
+    motoCC: 0,
+    avatar: null,
+    bio: '',
+    role: 'user',
+    totalRides: 0,
+    totalKm: 0,
+    totalEvents: 0,
+    rideHistory: [],
+    joinedAt: null,
+    lastSeen: null,
+    isOnline: false,
+    settings: {
+      notifications: true,
+      locationSharing: true,
+      darkMode: true,
+      sounds: true
+    }
+  },
+
+  ADMIN_EMAIL: 'shahmuradovk@gmail.com',
+
+  // ═══════════════════════════════════════════════════════════
+  // INIT — Safe, non-destructive
+  // ═══════════════════════════════════════════════════════════
+
+  init() {
+    // 1. Ensure all storage keys exist (without overwriting existing data)
+    this._ensureKeys();
+
+    // 2. Run schema migrations if needed
+    this._runMigrations();
+
+    // 3. Validate current session (without touching users data)
+    this._validateSession();
+  },
+
+  // ─── Ensure all keys exist (non-destructive) ──────────────
+  _ensureKeys() {
+    // Only create keys that don't exist at all — never overwrite
+    if (localStorage.getItem(this.KEYS.USERS) === null) {
+      this._write(this.KEYS.USERS, []);
+    }
+    if (localStorage.getItem(this.KEYS.EVENTS) === null) {
+      this._write(this.KEYS.EVENTS, []);
+    }
+    if (localStorage.getItem(this.KEYS.ALERTS) === null) {
+      this._write(this.KEYS.ALERTS, []);
+    }
+    if (localStorage.getItem(this.KEYS.LOCATIONS) === null) {
+      this._write(this.KEYS.LOCATIONS, []);
+    }
+    if (localStorage.getItem(this.KEYS.FRIENDS) === null) {
+      this._write(this.KEYS.FRIENDS, { friendships: [], requests: [] });
+    }
+    if (localStorage.getItem(this.KEYS.MESSAGES) === null) {
+      this._write(this.KEYS.MESSAGES, []);
+    }
+    if (localStorage.getItem(this.KEYS.SETTINGS) === null) {
+      this._write(this.KEYS.SETTINGS, {
+        mapStyle: 'dark',
+        language: 'az',
+        distanceUnit: 'km',
+        speedUnit: 'km/h'
+      });
+    }
+  },
+
+  // ─── Schema Migration System ──────────────────────────────
+  _runMigrations() {
+    const storedVersion = parseInt(localStorage.getItem(this.KEYS.SCHEMA_VERSION)) || 0;
+
+    if (storedVersion >= this.CURRENT_SCHEMA_VERSION) return; // Already up-to-date
+
+    console.log(`🔄 Migration: v${storedVersion} → v${this.CURRENT_SCHEMA_VERSION}`);
+
+    // Run each migration step sequentially
+    if (storedVersion < 1) this._migrateToV1();
+    if (storedVersion < 2) this._migrateToV2();
+
+    // Save current version
+    localStorage.setItem(this.KEYS.SCHEMA_VERSION, this.CURRENT_SCHEMA_VERSION.toString());
+    console.log('✅ Migration tamamlandı');
+  },
+
+  // Migration v1: Patch all users with missing fields
+  _migrateToV1() {
+    console.log('  → v1: User schema patching...');
+    const users = this.getUsers();
+    let changed = false;
+
+    users.forEach(user => {
+      // Add any missing fields from USER_DEFAULTS
+      for (const [key, defaultValue] of Object.entries(this.USER_DEFAULTS)) {
+        if (user[key] === undefined) {
+          if (typeof defaultValue === 'object' && defaultValue !== null) {
+            user[key] = JSON.parse(JSON.stringify(defaultValue)); // deep copy
+          } else {
+            user[key] = defaultValue;
+          }
+          changed = true;
         }
-      } catch (e) {
-        // Corrupted JSON — reset everything
-        this._seedDemoData();
       }
-    } else {
-      // First ever visit
-      this._seedDemoData();
+
+      // Patch nested settings — don't overwrite existing values
+      if (typeof user.settings !== 'object' || user.settings === null) {
+        user.settings = JSON.parse(JSON.stringify(this.USER_DEFAULTS.settings));
+        changed = true;
+      } else {
+        for (const [sKey, sDefault] of Object.entries(this.USER_DEFAULTS.settings)) {
+          if (user.settings[sKey] === undefined) {
+            user.settings[sKey] = sDefault;
+            changed = true;
+          }
+        }
+      }
+
+      // Ensure rideHistory is an array
+      if (!Array.isArray(user.rideHistory)) {
+        user.rideHistory = [];
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      this._write(this.KEYS.USERS, users);
     }
 
-    // Fix corrupted state: if current_user points to deleted user, clear session
-    const current = this.getCurrentUser();
-    if (current) {
-      const users = this.getUsers();
-      const exists = users.find(u => u.id === current.id);
-      if (!exists) {
-        localStorage.removeItem(this.KEYS.CURRENT_USER);
+    // Also clean up old 'moto_initialized' flag if it exists
+    localStorage.removeItem('moto_initialized');
+  },
+
+  // Migration v2: Enforce admin email role
+  _migrateToV2() {
+    console.log('  → v2: Admin email enforcement...');
+    const users = this.getUsers();
+    let changed = false;
+
+    users.forEach(user => {
+      if (user.email && user.email.toLowerCase() === this.ADMIN_EMAIL) {
+        if (user.role !== 'admin') {
+          user.role = 'admin';
+          changed = true;
+        }
       }
+    });
+
+    if (changed) {
+      this._write(this.KEYS.USERS, users);
+
+      // Also update current session if it's the admin user
+      const current = this.getCurrentUser();
+      if (current && current.email && current.email.toLowerCase() === this.ADMIN_EMAIL) {
+        current.role = 'admin';
+        this.setCurrentUser(current);
+      }
+    }
+  },
+
+  // ─── Session Validation (non-destructive) ─────────────────
+  _validateSession() {
+    const current = this.getCurrentUser();
+    if (!current) return; // No session — nothing to validate
+
+    // Check if session user still exists in users array
+    const users = this.getUsers();
+    const freshUser = users.find(u => u.id === current.id);
+
+    if (freshUser) {
+      // User exists — sync session with latest data from users array
+      this.setCurrentUser(freshUser);
+    } else {
+      // User was deleted — only remove session, do NOT touch users array
+      localStorage.removeItem(this.KEYS.CURRENT_USER);
+      console.log('ℹ️ Session user tapılmadı, session silindi');
     }
   },
 
@@ -495,27 +652,5 @@ const MotoStorage = {
 
   getInitials(firstName, lastName) {
     return ((firstName || '')[0] || '') + ((lastName || '')[0] || '');
-  },
-
-  // ═══════════════════════════════════════════════════════════
-  // DEMO DATA SEEDING
-  // ═══════════════════════════════════════════════════════════
-
-  _seedDemoData() {
-    // No demo data — clean start
-    this._write(this.KEYS.USERS, []);
-    this._write(this.KEYS.EVENTS, []);
-    this._write(this.KEYS.ALERTS, []);
-    this._write(this.KEYS.LOCATIONS, []);
-    this._write(this.KEYS.FRIENDS, { friendships: [], requests: [] });
-    this._write(this.KEYS.MESSAGES, []);
-
-    // Default Settings
-    this._write(this.KEYS.SETTINGS, {
-      mapStyle: 'dark',
-      language: 'az',
-      distanceUnit: 'km',
-      speedUnit: 'km/h'
-    });
   }
 };

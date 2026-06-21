@@ -236,13 +236,13 @@ const MotoAdmin = {
             }
             break;
           case 'clear-storage':
-            if (confirm('Bütün data silinəcək. Əminsiniz?')) {
+            if (confirm('Tədbirlər, xəbərdarlıqlar və məkan datası silinəcək. İstifadəçilər qalacaq. Əminsiniz?')) {
               if (typeof MotoStorage !== 'undefined') {
-                localStorage.removeItem(MotoStorage.KEYS.INITIALIZED);
                 localStorage.removeItem(MotoStorage.KEYS.EVENTS);
                 localStorage.removeItem(MotoStorage.KEYS.ALERTS);
                 localStorage.removeItem(MotoStorage.KEYS.LOCATIONS);
                 localStorage.removeItem(MotoStorage.KEYS.FRIENDS);
+                localStorage.removeItem(MotoStorage.KEYS.MESSAGES);
               }
               this._notify('Data sıfırlandı. Səhifə yenilənir...', 'info');
               setTimeout(() => location.reload(), 1500);
