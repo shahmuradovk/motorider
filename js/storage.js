@@ -535,6 +535,11 @@ const MotoStorage = {
     return locations[index];
   },
 
+  // Aliases used by map.js
+  getSharedLocations() { return this.getActiveLocations(); },
+  removeSharedLocation(userId) { return this.stopSharing(userId); },
+  updateUserLocation(userId, lat, lng) { return this.updateLocation(userId, { lat, lng }); },
+
   // ═══════════════════════════════════════════════════════════
   // FRIENDS
   // ═══════════════════════════════════════════════════════════
@@ -696,5 +701,53 @@ const MotoStorage = {
 
   getInitials(firstName, lastName) {
     return ((firstName || '')[0] || '') + ((lastName || '')[0] || '');
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // MISSING METHOD STUBS (called by other modules)
+  // ═══════════════════════════════════════════════════════════
+
+  saveRide(rideData) {
+    const user = this.getCurrentUser();
+    if (!user) return;
+    const users = this.getUsers();
+    const index = users.findIndex(u => u.id === user.id);
+    if (index === -1) return;
+    if (!Array.isArray(users[index].rideHistory)) users[index].rideHistory = [];
+    users[index].rideHistory.unshift(rideData);
+    users[index].totalRides = (users[index].totalRides || 0) + 1;
+    users[index].totalKm = (users[index].totalKm || 0) + (rideData.distance || 0);
+    this._write(this.KEYS.USERS, users);
+    this.setCurrentUser(users[index]);
+  },
+
+  saveAlert(alertData) {
+    return this.createAlert(alertData);
+  },
+
+  saveEvent(eventData) {
+    return this.createEvent(eventData);
+  },
+
+  setAlerts(alertsArray) {
+    this._write(this.KEYS.ALERTS, alertsArray);
+  },
+
+  addNotification(notifData) {
+    // Notifications are in-memory only via MotoNotifications module
+    // This is a no-op stub to prevent crashes
+    console.log('📢 Notification:', notifData);
+  },
+
+  addFriend(userId, friendId) {
+    return this.sendFriendRequest(userId, friendId);
+  },
+
+  logout() {
+    const user = this.getCurrentUser();
+    if (user) {
+      this.updateUser(user.id, { isOnline: false, lastSeen: new Date().toISOString() });
+    }
+    localStorage.removeItem(this.KEYS.CURRENT_USER);
   }
 };
