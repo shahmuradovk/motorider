@@ -679,6 +679,137 @@ const MotoMap = {
     });
   },
 
+  /* ──────────────────────────────────────────────
+     HARADAYAM — show current location
+  ────────────────────────────────────────────── */
+  showMyLocation() {
+    MotoApp.showToast('📍 Yer təyin olunur...', 'info');
+    this.getCurrentLocation((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      this.updateUserMarker(lat, lng);
+      this.map.setView([lat, lng], 16, { animate: true });
+
+      /* Reverse geocode via Nominatim */
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=az`)
+        .then(r => r.json())
+        .then(data => {
+          const addr = data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          const short = (data.address && (data.address.road || data.address.neighbourhood || data.address.suburb)) || addr.split(',')[0];
+          MotoApp.showToast(`📍 ${short}`, 'success');
+
+          /* Show popup on marker */
+          if (this.userMarker) {
+            this.userMarker.unbindPopup();
+            this.userMarker.bindPopup(`
+              <div class="moto-popup">
+                <strong>📍 Siz buradasınız</strong>
+                <p style="font-size:0.8rem; color:#999; margin:4px 0 0;">${short}</p>
+              </div>
+            `).openPopup();
+          }
+        })
+        .catch(() => {
+          MotoApp.showToast(`📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
+        });
+    });
+  },
+
+  /* ──────────────────────────────────────────────
+     TƏHLÜKƏ BİLDİR — danger report on map
+  ────────────────────────────────────────────── */
+  startDangerReport() {
+    this.getCurrentLocation((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      const types = [
+        { id: 'accident', icon: '💥', label: 'Qəza' },
+        { id: 'pothole', icon: '🕳️', label: 'Çuxur' },
+        { id: 'construction', icon: '🚧', label: 'Yol təmiri' },
+        { id: 'traffic', icon: '🚗', label: 'Sıx trafik' },
+        { id: 'danger', icon: '⚠️', label: 'Digər təhlükə' },
+      ];
+
+      let typeBtns = '';
+      types.forEach(t => {
+        typeBtns += `<button class="danger-type-btn" data-type="${t.id}" onclick="MotoMap._selectDangerType(this, '${t.id}')" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px; background:rgba(26,26,46,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; cursor:pointer; flex:1; min-width:60px;"><span style="font-size:1.5rem;">${t.icon}</span><span style="font-size:0.72rem; color:#999;">${t.label}</span></button>`;
+      });
+
+      const html = `
+        <div id="danger-report-form">
+          <p style="font-size:0.82rem; color:#999; margin-bottom:12px;">📍 Hazırkı yeriniz qeyd olunacaq</p>
+          <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">${typeBtns}</div>
+          <input type="hidden" id="danger-type" value="" />
+          <input type="hidden" id="danger-lat" value="${lat}" />
+          <input type="hidden" id="danger-lng" value="${lng}" />
+          <div class="p-edit-group" style="margin-bottom:14px;">
+            <label class="p-edit-label">Təsvir</label>
+            <textarea id="danger-desc" class="p-edit-input" rows="2" placeholder="Nə baş verir? Təsvir edin..." maxlength="200" style="resize:vertical;"></textarea>
+          </div>
+          <button class="p-edit-save" onclick="MotoMap._submitDangerReport()">
+            ⚠️ Təhlükəni Bildir
+          </button>
+        </div>
+      `;
+
+      MotoApp.openModal(html, '⚠️ Təhlükə Bildir');
+    });
+  },
+
+  _selectDangerType(btn, typeId) {
+    document.querySelectorAll('.danger-type-btn').forEach(b => {
+      b.style.borderColor = 'rgba(255,255,255,0.08)';
+      b.style.background = 'rgba(26,26,46,0.6)';
+    });
+    btn.style.borderColor = '#ff6b35';
+    btn.style.background = 'rgba(255,107,53,0.15)';
+    document.getElementById('danger-type').value = typeId;
+  },
+
+  _submitDangerReport() {
+    const type = document.getElementById('danger-type').value;
+    const desc = document.getElementById('danger-desc').value.trim();
+    const lat = parseFloat(document.getElementById('danger-lat').value);
+    const lng = parseFloat(document.getElementById('danger-lng').value);
+
+    if (!type) {
+      MotoApp.showToast('Təhlükə növünü seçin', 'error');
+      return;
+    }
+    if (!desc) {
+      MotoApp.showToast('Təsvir yazın', 'error');
+      return;
+    }
+
+    const alert = {
+      id: 'alert_' + Date.now(),
+      type: type,
+      description: desc,
+      lat: lat,
+      lng: lng,
+      createdAt: new Date().toISOString(),
+      timestamp: Date.now(),
+      userId: '',
+      votes: { up: 0, down: 0 },
+    };
+
+    if (typeof MotoStorage !== 'undefined') {
+      const user = MotoStorage.getCurrentUser();
+      if (user) alert.userId = user.id;
+      MotoStorage.createAlert(alert);
+    }
+
+    /* Add marker to map */
+    this.addAlertMarker(alert);
+
+    MotoApp.closeModal();
+    MotoApp.showToast('Təhlükə bildirişi göndərildi! ⚠️', 'success');
+
+    /* Refresh alerts page if visible */
+    if (typeof MotoAlerts !== 'undefined') MotoAlerts.renderAlerts();
+  },
+
   stopSharingLocation() {
     this.isSharing = false;
     if (typeof MotoStorage !== 'undefined') {

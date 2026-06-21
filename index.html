@@ -22,13 +22,13 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 
   <!-- App CSS -->
-  <link rel="stylesheet" href="css/index.css?v=7">
-  <link rel="stylesheet" href="css/auth.css?v=7">
-  <link rel="stylesheet" href="css/map.css?v=7">
-  <link rel="stylesheet" href="css/events.css?v=7">
-  <link rel="stylesheet" href="css/alerts.css?v=7">
-  <link rel="stylesheet" href="css/profile.css?v=7">
-  <link rel="stylesheet" href="css/admin.css?v=7">
+  <link rel="stylesheet" href="css/index.css?v=8">
+  <link rel="stylesheet" href="css/auth.css?v=8">
+  <link rel="stylesheet" href="css/map.css?v=8">
+  <link rel="stylesheet" href="css/events.css?v=8">
+  <link rel="stylesheet" href="css/alerts.css?v=8">
+  <link rel="stylesheet" href="css/profile.css?v=8">
+  <link rel="stylesheet" href="css/admin.css?v=8">
   <style>
     /* Splash Screen */
     #splash-screen {
@@ -451,13 +451,16 @@
 
           <!-- Map Controls (right side) -->
           <div class="map-controls" id="map-controls-panel">
-            <button class="map-control-btn" id="map-center-btn" aria-label="Mərkəzə qayıt">
+            <button class="map-control-btn" id="map-center-btn" aria-label="Mərkəzə qayıt"
+                    onclick="event.stopPropagation(); MotoMap.centerOnUser();">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/></svg>
             </button>
-            <button class="map-control-btn" id="map-share-toggle" aria-label="Yer paylaş" title="Yerimi paylaş">
+            <button class="map-control-btn" id="map-share-toggle" aria-label="Yer paylaş" title="Yerimi paylaş"
+                    onclick="event.stopPropagation(); MotoMap.toggleShareLocation();">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             </button>
-            <button class="map-control-btn" id="map-layer-btn" aria-label="Xəritə təbəqəsi">
+            <button class="map-control-btn" id="map-layer-btn" aria-label="Xəritə təbəqəsi"
+                    onclick="event.stopPropagation(); MotoMap.toggleMapLayer();">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
             </button>
           </div>
@@ -474,24 +477,28 @@
             <!-- Mini FABs (hidden until expanded) -->
             <div class="map-fab-mini-wrapper" style="display:none;">
               <span class="map-fab-label">Sürüşə Başla</span>
-              <button class="map-fab-mini" id="fab-start-ride" aria-label="Sürüşə Başla">
+              <button class="map-fab-mini" id="fab-start-ride" aria-label="Sürüşə Başla"
+                      onclick="event.stopPropagation(); MotoMap.collapseFAB(); MotoMap.startRiding('community');">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </button>
             </div>
             <div class="map-fab-mini-wrapper" style="display:none;">
               <span class="map-fab-label">Haradayam</span>
-              <button class="map-fab-mini" id="fab-share-location" aria-label="Haradayam">
+              <button class="map-fab-mini" id="fab-share-location" aria-label="Haradayam"
+                      onclick="event.stopPropagation(); MotoMap.collapseFAB(); MotoMap.showMyLocation();">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               </button>
             </div>
             <div class="map-fab-mini-wrapper" style="display:none;">
               <span class="map-fab-label">Təhlükə Bildir</span>
-              <button class="map-fab-mini" id="fab-report-danger" aria-label="Təhlükə Bildir" style="background: rgba(255,51,51,0.15); color: #ff3333; border-color: rgba(255,51,51,0.25);">
+              <button class="map-fab-mini" id="fab-report-danger" aria-label="Təhlükə Bildir" style="background: rgba(255,51,51,0.15); color: #ff3333; border-color: rgba(255,51,51,0.25);"
+                      onclick="event.stopPropagation(); MotoMap.collapseFAB(); MotoMap.startDangerReport();">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </button>
             </div>
             <!-- Main FAB (toggle) -->
-            <button class="map-fab-main" id="map-fab-main" aria-label="Əməliyyatlar">
+            <button class="map-fab-main" id="map-fab-main" aria-label="Əməliyyatlar"
+                    onclick="event.stopPropagation(); MotoMap.toggleFAB();">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
           </div>
@@ -1048,16 +1055,16 @@
   <!-- SCRIPTS                                     -->
   <!-- ═══════════════════════════════════════════ -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="js/storage.js?v=7"></script>
-  <script src="js/api.js?v=7"></script>
-  <script src="js/notifications.js?v=7"></script>
-  <script src="js/auth.js?v=7"></script>
-  <script src="js/map.js?v=7"></script>
-  <script src="js/events.js?v=7"></script>
-  <script src="js/alerts.js?v=7"></script>
-  <script src="js/friends.js?v=7"></script>
-  <script src="js/admin.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
+  <script src="js/storage.js?v=8"></script>
+  <script src="js/api.js?v=8"></script>
+  <script src="js/notifications.js?v=8"></script>
+  <script src="js/auth.js?v=8"></script>
+  <script src="js/map.js?v=8"></script>
+  <script src="js/events.js?v=8"></script>
+  <script src="js/alerts.js?v=8"></script>
+  <script src="js/friends.js?v=8"></script>
+  <script src="js/admin.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 
 </body>
 </html>
