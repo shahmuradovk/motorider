@@ -20,7 +20,7 @@ const MotoStorage = {
   },
 
   // Current schema version — increment when adding migrations
-  CURRENT_SCHEMA_VERSION: 2,
+  CURRENT_SCHEMA_VERSION: 3,
 
   // ─── Default field values for user schema ──────────────────
   USER_DEFAULTS: {
@@ -110,6 +110,7 @@ const MotoStorage = {
     // Run each migration step sequentially
     if (storedVersion < 1) this._migrateToV1();
     if (storedVersion < 2) this._migrateToV2();
+    if (storedVersion < 3) this._migrateToV3();
 
     // Save current version
     localStorage.setItem(this.KEYS.SCHEMA_VERSION, this.CURRENT_SCHEMA_VERSION.toString());
@@ -187,6 +188,49 @@ const MotoStorage = {
         current.role = 'admin';
         this.setCurrentUser(current);
       }
+    }
+  },
+
+  // Migration v3: Ensure admin user exists
+  _migrateToV3() {
+    console.log('  → v3: Admin user yaradılır...');
+    const users = this.getUsers();
+    const adminExists = users.find(u => u.email && u.email.toLowerCase() === this.ADMIN_EMAIL);
+
+    if (!adminExists) {
+      const adminUser = {
+        id: this.generateId(),
+        firstName: 'Admin',
+        lastName: 'MotoRiders',
+        birthdate: '1995-01-01',
+        email: this.ADMIN_EMAIL,
+        phone: '+994 50 000 00 00',
+        password: '123456',
+        motoBrand: 'Yamaha',
+        motoModel: 'MT-07',
+        motoCC: 689,
+        avatar: null,
+        bio: 'MotoRiders admin',
+        role: 'admin',
+        totalRides: 0,
+        totalKm: 0,
+        totalEvents: 0,
+        rideHistory: [],
+        joinedAt: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+        isOnline: false,
+        settings: {
+          notifications: true,
+          locationSharing: true,
+          darkMode: true,
+          sounds: true
+        }
+      };
+      users.push(adminUser);
+      this._write(this.KEYS.USERS, users);
+      console.log('  ✅ Admin user yaradıldı: ' + this.ADMIN_EMAIL);
+    } else {
+      console.log('  ℹ️ Admin user mövcuddur');
     }
   },
 
