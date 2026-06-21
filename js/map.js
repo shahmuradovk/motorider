@@ -1,6 +1,7 @@
 /* ================================================================
    MotoMap — Map & Live Location Module (Leaflet.js)
    MotoRiders Community App (Baku, Azerbaijan)
+   Phase 1: Premium Map UI + Floating Dashboard
    ================================================================ */
 
 const MotoMap = {
@@ -8,20 +9,20 @@ const MotoMap = {
   userMarker: null,
   watchId: null,
   isRiding: false,
+  isPaused: false,
   isSharing: false,
-  rideData: { path: [], startTime: null, distance: 0 },
+  rideData: { path: [], startTime: null, distance: 0, maxSpeed: 0, pausedTime: 0, pauseStart: null },
   markers: {},
   alertMarkers: {},
   eventMarkers: {},
   routeLine: null,
   rideTimer: null,
   demoAnimationId: null,
+  fabExpanded: false,
 
   /* Baku centre */
   BAKU_CENTER: [40.4093, 49.8671],
   DEFAULT_ZOOM: 13,
-
-  /* No hardcoded demo users — map shows real shared locations only */
   DEMO_USERS: [],
 
   /* ──────────────────────────────────────────────
@@ -29,11 +30,14 @@ const MotoMap = {
   ────────────────────────────────────────────── */
   init() {
     this.setupMap();
-    this.addMapControls();
+    this.setupFAB();
+    this.setupMapControls();
+    this.setupLegend();
+    this.setupSearch();
     this.loadActiveLocations();
     this.loadAlerts();
     this.loadEvents();
-    this.startDemoAnimation();
+    this.updateRidersOnline();
 
     /* Try to get user location once */
     this.getCurrentLocation((pos) => {
@@ -72,32 +76,153 @@ const MotoMap = {
     ).addTo(this.map);
   },
 
-  addMapControls() {
-    if (!this.map) return;
+  /* ──────────────────────────────────────────────
+     MAP CONTROLS (center + layer)
+  ────────────────────────────────────────────── */
+  setupMapControls() {
+    const centerBtn = document.getElementById('map-center-btn');
+    const layerBtn = document.getElementById('map-layer-btn');
 
-    /* Custom zoom control */
-    const zoomControl = L.control({ position: 'topright' });
-    zoomControl.onAdd = () => {
-      const div = L.DomUtil.create('div', 'moto-map-controls');
-      div.innerHTML = `
-        <button class="map-ctrl-btn" id="map-zoom-in" title="Yaxınlaşdır">+</button>
-        <button class="map-ctrl-btn" id="map-zoom-out" title="Uzaqlaşdır">−</button>
-        <button class="map-ctrl-btn" id="map-locate" title="Mənim yerim">📍</button>
+    if (centerBtn) centerBtn.addEventListener('click', () => this.centerOnUser());
+    if (layerBtn) layerBtn.addEventListener('click', () => this.toggleMapLayer());
+  },
+
+  toggleMapLayer() {
+    MotoApp.showToast('Xəritə təbəqəsi tezliklə!', 'info');
+  },
+
+  /* ──────────────────────────────────────────────
+     EXPANDABLE FAB GROUP
+  ────────────────────────────────────────────── */
+  setupFAB() {
+    const mainFab = document.getElementById('map-fab-main');
+    const fabGroup = document.getElementById('map-fab-group');
+    const startRide = document.getElementById('fab-start-ride');
+    const shareLocation = document.getElementById('fab-share-location');
+    const reportDanger = document.getElementById('fab-report-danger');
+
+    if (mainFab) {
+      mainFab.addEventListener('click', () => this.toggleFAB());
+    }
+
+    if (startRide) {
+      startRide.addEventListener('click', () => {
+        this.collapseFAB();
+        this.showShareModeModal((mode) => this.startRiding(mode));
+      });
+    }
+
+    if (shareLocation) {
+      shareLocation.addEventListener('click', () => {
+        this.collapseFAB();
+        this.showShareModeModal((mode) => this.shareStaticLocation('', mode));
+      });
+    }
+
+    if (reportDanger) {
+      reportDanger.addEventListener('click', () => {
+        this.collapseFAB();
+        if (typeof MotoAlerts !== 'undefined') {
+          MotoAlerts.showCreateForm();
+        }
+      });
+    }
+  },
+
+  toggleFAB() {
+    this.fabExpanded ? this.collapseFAB() : this.expandFAB();
+  },
+
+  expandFAB() {
+    this.fabExpanded = true;
+    const group = document.getElementById('map-fab-group');
+    const main = document.getElementById('map-fab-main');
+    if (group) group.classList.add('expanded');
+    if (main) main.classList.add('expanded');
+
+    /* Show mini wrappers with stagger */
+    const wrappers = group ? group.querySelectorAll('.map-fab-mini-wrapper') : [];
+    wrappers.forEach((w, i) => {
+      setTimeout(() => { w.style.display = 'flex'; }, i * 50);
+    });
+  },
+
+  collapseFAB() {
+    this.fabExpanded = false;
+    const group = document.getElementById('map-fab-group');
+    const main = document.getElementById('map-fab-main');
+    if (group) group.classList.remove('expanded');
+    if (main) main.classList.remove('expanded');
+
+    const wrappers = group ? group.querySelectorAll('.map-fab-mini-wrapper') : [];
+    wrappers.forEach(w => { w.style.display = 'none'; });
+  },
+
+  /* ──────────────────────────────────────────────
+     LEGEND TOGGLE
+  ────────────────────────────────────────────── */
+  setupLegend() {
+    const toggle = document.getElementById('map-legend-toggle');
+    const content = document.getElementById('map-legend-content');
+    if (toggle && content) {
+      toggle.addEventListener('click', () => content.classList.toggle('hidden'));
+    }
+  },
+
+  /* ──────────────────────────────────────────────
+     MAP SEARCH (basic — shows placeholder)
+  ────────────────────────────────────────────── */
+  setupSearch() {
+    const input = document.getElementById('map-search-input');
+    if (!input) return;
+
+    input.addEventListener('focus', () => {
+      const results = document.getElementById('map-search-results');
+      if (results && !input.value.trim()) {
+        results.classList.add('hidden');
+      }
+    });
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim();
+      const results = document.getElementById('map-search-results');
+      if (!results) return;
+
+      if (!q) {
+        results.classList.add('hidden');
+        return;
+      }
+
+      results.classList.remove('hidden');
+      results.innerHTML = `
+        <div class="map-search-result" onclick="MotoApp.showToast('Axtarış funksiyası tezliklə!', 'info')">
+          <div class="map-search-result-icon">🔍</div>
+          <div class="map-search-result-text">
+            <div class="map-search-result-name">"${q}" üçün axtarış</div>
+            <div class="map-search-result-address">Tezliklə...</div>
+          </div>
+        </div>
       `;
-      L.DomEvent.disableClickPropagation(div);
-      return div;
-    };
-    zoomControl.addTo(this.map);
+    });
+  },
 
-    /* Bind control buttons after a tick (DOM needs to render) */
-    setTimeout(() => {
-      const zoomIn = document.getElementById('map-zoom-in');
-      const zoomOut = document.getElementById('map-zoom-out');
-      const locate = document.getElementById('map-locate');
-      if (zoomIn) zoomIn.addEventListener('click', () => this.map.zoomIn());
-      if (zoomOut) zoomOut.addEventListener('click', () => this.map.zoomOut());
-      if (locate) locate.addEventListener('click', () => this.centerOnUser());
-    }, 100);
+  /* ──────────────────────────────────────────────
+     RIDERS ONLINE COUNT
+  ────────────────────────────────────────────── */
+  updateRidersOnline() {
+    let count = Object.keys(this.markers).length;
+
+    /* Add shared locations */
+    if (typeof MotoStorage !== 'undefined' && MotoStorage.getSharedLocations) {
+      const shared = MotoStorage.getSharedLocations() || [];
+      count = Math.max(count, shared.length);
+    }
+
+    /* Always show at least 1 (the user) */
+    count = Math.max(count, 1);
+
+    const el = document.getElementById('riders-online-count');
+    if (el) el.textContent = count;
   },
 
   /* ──────────────────────────────────────────────
@@ -105,8 +230,6 @@ const MotoMap = {
   ────────────────────────────────────────────── */
   getCurrentLocation(callback) {
     if (!navigator.geolocation) {
-      console.warn('Geolocation not supported, using Baku center');
-      /* Fake position for demo */
       callback({
         coords: {
           latitude: this.BAKU_CENTER[0],
@@ -119,7 +242,6 @@ const MotoMap = {
     navigator.geolocation.getCurrentPosition(
       callback,
       () => {
-        /* On error fallback to Baku center */
         callback({
           coords: {
             latitude: this.BAKU_CENTER[0],
@@ -140,25 +262,30 @@ const MotoMap = {
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        const speed = pos.coords.speed; // m/s or null
+        const speed = pos.coords.speed;
 
         this.updateUserMarker(lat, lng);
 
-        if (this.isRiding) {
+        if (this.isRiding && !this.isPaused) {
           const path = this.rideData.path;
           if (path.length > 0) {
             const last = path[path.length - 1];
-            const seg = this.calculateDistance(
-              last[0],
-              last[1],
-              lat,
-              lng
-            );
+            const seg = this.calculateDistance(last[0], last[1], lat, lng);
             this.rideData.distance += seg;
           }
           path.push([lat, lng]);
           this.drawRoute(path);
-          this.updateRideStats(speed);
+
+          /* Track max speed */
+          let speedKmh = 0;
+          if (speed && speed > 0) {
+            speedKmh = speed * 3.6;
+          }
+          if (speedKmh > this.rideData.maxSpeed) {
+            this.rideData.maxSpeed = speedKmh;
+          }
+
+          this.updateDashboard(speedKmh);
         }
 
         /* Save to storage for sharing */
@@ -224,23 +351,70 @@ const MotoMap = {
   startRiding(shareMode) {
     if (this.isRiding) return;
     this.isRiding = true;
+    this.isPaused = false;
     this.isSharing = shareMode === 'community' || shareMode === 'friends';
-    this.rideData = { path: [], startTime: Date.now(), distance: 0 };
+    this.rideData = { path: [], startTime: Date.now(), distance: 0, maxSpeed: 0, pausedTime: 0, pauseStart: null };
 
     this.startWatching();
-    this.showRidingPanel();
+    this.showDashboard();
 
     /* Timer updates every second */
-    this.rideTimer = setInterval(() => this.updateRideStats(), 1000);
+    this.rideTimer = setInterval(() => this.updateDashboard(), 1000);
 
-    if (typeof MotoApp !== 'undefined') {
-      MotoApp.showToast('Sürüş başladı! 🏍️', 'success');
+    MotoApp.showToast('Sürüş başladı! 🏍️', 'success');
+  },
+
+  pauseRiding() {
+    if (!this.isRiding || this.isPaused) return;
+    this.isPaused = true;
+    this.rideData.pauseStart = Date.now();
+    this.stopWatching();
+
+    /* Update pause button */
+    const pauseBtn = document.getElementById('dash-pause-btn');
+    if (pauseBtn) {
+      pauseBtn.innerHTML = '▶️';
+      pauseBtn.title = 'Davam et';
+      pauseBtn.classList.add('active');
     }
+    const statusEl = document.getElementById('dash-status');
+    if (statusEl) statusEl.textContent = 'FASILƏ';
+
+    MotoApp.showToast('Sürüş fasiləyə alındı ⏸️', 'info');
+  },
+
+  resumeRiding() {
+    if (!this.isRiding || !this.isPaused) return;
+    this.isPaused = false;
+
+    /* Calculate total paused time */
+    if (this.rideData.pauseStart) {
+      this.rideData.pausedTime += Date.now() - this.rideData.pauseStart;
+      this.rideData.pauseStart = null;
+    }
+
+    this.startWatching();
+
+    const pauseBtn = document.getElementById('dash-pause-btn');
+    if (pauseBtn) {
+      pauseBtn.innerHTML = '⏸️';
+      pauseBtn.title = 'Fasilə';
+      pauseBtn.classList.remove('active');
+    }
+    const statusEl = document.getElementById('dash-status');
+    if (statusEl) statusEl.textContent = 'CANLI';
+
+    MotoApp.showToast('Sürüş davam edir! 🏍️', 'success');
+  },
+
+  togglePause() {
+    this.isPaused ? this.resumeRiding() : this.pauseRiding();
   },
 
   stopRiding() {
     if (!this.isRiding) return;
     this.isRiding = false;
+    this.isPaused = false;
     this.isSharing = false;
 
     if (this.rideTimer) {
@@ -248,44 +422,148 @@ const MotoMap = {
       this.rideTimer = null;
     }
     this.stopWatching();
-    this.hideRidingPanel();
+    this.hideDashboard();
     this.showRideSummary();
   },
 
-  updateRideStats(currentSpeed) {
-    const elapsed = Date.now() - (this.rideData.startTime || Date.now());
+  /* ──────────────────────────────────────────────
+     PREMIUM FLOATING DASHBOARD
+  ────────────────────────────────────────────── */
+  showDashboard() {
+    /* Hide FAB group during ride */
+    const fabGroup = document.getElementById('map-fab-group');
+    if (fabGroup) fabGroup.style.display = 'none';
+
+    let panel = document.getElementById('ride-dashboard');
+    if (panel) { panel.remove(); }
+
+    panel = document.createElement('div');
+    panel.id = 'ride-dashboard';
+    panel.className = 'live-panel active';
+    panel.innerHTML = `
+      <div class="live-panel-handle"></div>
+      <div class="live-panel-header">
+        <div class="live-panel-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Sürüş
+        </div>
+        <div class="live-indicator">
+          <span class="live-indicator-dot"></span>
+          <span id="dash-status">CANLI</span>
+        </div>
+      </div>
+
+      <div class="riding-stats">
+        <div class="riding-stat speed">
+          <span class="riding-stat-label">Sürət</span>
+          <span class="riding-stat-value" id="dash-speed">0 <span class="unit">km/s</span></span>
+        </div>
+        <div class="riding-stat">
+          <span class="riding-stat-label">Məsafə</span>
+          <span class="riding-stat-value" id="dash-distance">0.00 <span class="unit">km</span></span>
+        </div>
+        <div class="riding-stat">
+          <span class="riding-stat-label">Vaxt</span>
+          <span class="riding-stat-value" id="dash-time">00:00</span>
+        </div>
+      </div>
+
+      <div class="riding-stats" style="margin-bottom: 12px;">
+        <div class="riding-stat">
+          <span class="riding-stat-label">Orta Sürət</span>
+          <span class="riding-stat-value" id="dash-avg-speed">0 <span class="unit">km/s</span></span>
+        </div>
+        <div class="riding-stat">
+          <span class="riding-stat-label">Maks Sürət</span>
+          <span class="riding-stat-value" id="dash-max-speed">0 <span class="unit">km/s</span></span>
+        </div>
+        <div class="riding-stat">
+          <span class="riding-stat-label">GPS</span>
+          <span class="riding-stat-value" id="dash-gps" style="color: var(--accent-success);">●</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="map-fab-mini" id="dash-pause-btn" title="Fasilə" style="width: 48px; height: 48px; border-radius: 50%;" onclick="MotoMap.togglePause()">
+          ⏸️
+        </button>
+        <button style="flex: 1; padding: 14px; background: linear-gradient(135deg, #ff3333, #ff6b35); border: none; border-radius: 12px; color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 16px rgba(255,51,51,0.3);" onclick="MotoMap.stopRiding()" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          🛑 Sürüşü Bitir
+        </button>
+      </div>
+    `;
+
+    const mapPage = document.getElementById('page-map');
+    if (mapPage) {
+      mapPage.appendChild(panel);
+    }
+  },
+
+  hideDashboard() {
+    const panel = document.getElementById('ride-dashboard');
+    if (panel) {
+      panel.classList.remove('active');
+      setTimeout(() => panel.remove(), 400);
+    }
+
+    /* Show FAB group again */
+    const fabGroup = document.getElementById('map-fab-group');
+    if (fabGroup) fabGroup.style.display = '';
+  },
+
+  updateDashboard(currentSpeed) {
+    if (!this.isRiding) return;
+
+    /* Time calculation (subtract paused time) */
+    let elapsed = Date.now() - (this.rideData.startTime || Date.now()) - (this.rideData.pausedTime || 0);
+    if (this.isPaused && this.rideData.pauseStart) {
+      elapsed -= (Date.now() - this.rideData.pauseStart);
+    }
+    if (elapsed < 0) elapsed = 0;
+
     const seconds = Math.floor(elapsed / 1000);
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     const hrs = Math.floor(mins / 60);
     const rMins = mins % 60;
 
-    const timeStr =
-      hrs > 0
-        ? `${hrs}:${String(rMins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-        : `${String(rMins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    const timeStr = hrs > 0
+      ? `${hrs}:${String(rMins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+      : `${String(rMins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
     const distKm = this.rideData.distance.toFixed(2);
 
-    /* Speed: use geolocation speed if available, else calc from distance/time */
+    /* Speed */
     let speedKmh = 0;
     if (currentSpeed && currentSpeed > 0) {
-      speedKmh = (currentSpeed * 3.6).toFixed(0); // m/s → km/h
+      speedKmh = currentSpeed;
     } else if (seconds > 0) {
-      speedKmh = ((this.rideData.distance / (seconds / 3600)) || 0).toFixed(0);
+      speedKmh = (this.rideData.distance / (seconds / 3600)) || 0;
     }
 
-    const timeEl = document.getElementById('ride-time');
-    const distEl = document.getElementById('ride-distance');
-    const speedEl = document.getElementById('ride-speed');
+    /* Average speed */
+    const avgSpeed = seconds > 0
+      ? ((this.rideData.distance / (elapsed / 3600000)) || 0).toFixed(0)
+      : '0';
 
-    if (timeEl) timeEl.textContent = timeStr;
-    if (distEl) distEl.textContent = `${distKm} km`;
-    if (speedEl) speedEl.textContent = `${speedKmh} km/s`;
+    /* Update DOM elements safely */
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+    set('dash-time', timeStr);
+    set('dash-distance', `${distKm} <span class="unit">km</span>`);
+    set('dash-speed', `${Math.round(speedKmh)} <span class="unit">km/s</span>`);
+    set('dash-avg-speed', `${avgSpeed} <span class="unit">km/s</span>`);
+    set('dash-max-speed', `${Math.round(this.rideData.maxSpeed)} <span class="unit">km/s</span>`);
+
+    /* GPS indicator */
+    const gpsEl = document.getElementById('dash-gps');
+    if (gpsEl) {
+      gpsEl.style.color = this.watchId !== null ? 'var(--accent-success)' : 'var(--text-muted)';
+      gpsEl.innerHTML = this.watchId !== null ? '●' : '○';
+    }
   },
 
   calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth radius in km
+    const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
@@ -299,55 +577,55 @@ const MotoMap = {
   },
 
   showRideSummary() {
-    const elapsed = Date.now() - (this.rideData.startTime || Date.now());
+    const elapsed = Date.now() - (this.rideData.startTime || Date.now()) - (this.rideData.pausedTime || 0);
     const totalMin = (elapsed / 60000).toFixed(1);
     const totalKm = this.rideData.distance.toFixed(2);
-    const avgSpeed =
-      elapsed > 0
-        ? ((this.rideData.distance / (elapsed / 3600000)) || 0).toFixed(1)
-        : '0';
+    const avgSpeed = elapsed > 0
+      ? ((this.rideData.distance / (elapsed / 3600000)) || 0).toFixed(1)
+      : '0';
+    const maxSpeed = Math.round(this.rideData.maxSpeed);
 
     const html = `
-      <div class="ride-summary">
-        <div class="ride-summary-icon">🏁</div>
-        <h3 class="ride-summary-title">Sürüş Tamamlandı!</h3>
+      <div style="text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 8px;">🏁</div>
+        <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: var(--text-primary); margin-bottom: 20px;">Sürüş Tamamlandı!</h3>
 
-        <div class="ride-summary-stats">
-          <div class="summary-stat">
-            <span class="summary-stat-value">${totalKm}</span>
-            <span class="summary-stat-label">km Məsafə</span>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+          <div class="riding-stat">
+            <span class="riding-stat-value">${totalKm}</span>
+            <span class="riding-stat-label">km Məsafə</span>
           </div>
-          <div class="summary-stat">
-            <span class="summary-stat-value">${totalMin}</span>
-            <span class="summary-stat-label">dəqiqə Vaxt</span>
+          <div class="riding-stat">
+            <span class="riding-stat-value">${totalMin}</span>
+            <span class="riding-stat-label">dəq Vaxt</span>
           </div>
-          <div class="summary-stat">
-            <span class="summary-stat-value">${avgSpeed}</span>
-            <span class="summary-stat-label">km/s Orta Sürət</span>
+          <div class="riding-stat">
+            <span class="riding-stat-value">${avgSpeed}</span>
+            <span class="riding-stat-label">km/s Orta</span>
+          </div>
+          <div class="riding-stat">
+            <span class="riding-stat-value">${maxSpeed}</span>
+            <span class="riding-stat-label">km/s Maks</span>
           </div>
         </div>
 
-        <button class="btn-primary" onclick="MotoApp.closeModal(); MotoMap.clearRoute();">
+        <button class="p-edit-save" onclick="MotoApp.closeModal(); MotoMap.clearRoute();">
           Bağla
         </button>
       </div>
     `;
 
-    if (typeof MotoApp !== 'undefined') {
-      MotoApp.openModal(html, 'Sürüş Xülasəsi');
-    }
+    MotoApp.openModal(html, 'Sürüş Xülasəsi');
 
     /* Save ride to storage */
     if (typeof MotoStorage !== 'undefined') {
       MotoStorage.saveRide({
         id: 'ride_' + Date.now(),
-        userId:
-          MotoStorage.getCurrentUser()
-            ? MotoStorage.getCurrentUser().id
-            : 'unknown',
+        userId: MotoStorage.getCurrentUser() ? MotoStorage.getCurrentUser().id : 'unknown',
         distance: parseFloat(totalKm),
         duration: parseFloat(totalMin),
         avgSpeed: parseFloat(avgSpeed),
+        maxSpeed: maxSpeed,
         path: this.rideData.path,
         date: new Date().toISOString(),
       });
@@ -355,7 +633,7 @@ const MotoMap = {
   },
 
   /* ──────────────────────────────────────────────
-     STATIC LOCATION SHARING  (Haradayam)
+     STATIC LOCATION SHARING
   ────────────────────────────────────────────── */
   shareStaticLocation(message, shareMode) {
     this.isSharing = true;
@@ -368,7 +646,7 @@ const MotoMap = {
         if (user) {
           MotoStorage.shareLocation({
             userId: user.id,
-            name: user.name,
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
             lat: lat,
             lng: lng,
             message: message || '',
@@ -380,10 +658,8 @@ const MotoMap = {
 
       this.updateUserMarker(lat, lng);
       this.map.setView([lat, lng], 15, { animate: true });
-
-      if (typeof MotoApp !== 'undefined') {
-        MotoApp.showToast('Yeriniz paylaşıldı! 📍', 'success');
-      }
+      MotoApp.showToast('Yeriniz paylaşıldı! 📍', 'success');
+      this.updateRidersOnline();
     });
   },
 
@@ -395,24 +671,19 @@ const MotoMap = {
         MotoStorage.removeSharedLocation(user.id);
       }
     }
-    this.hideLocationSharePanel();
-    if (typeof MotoApp !== 'undefined') {
-      MotoApp.showToast('Yer paylaşımı dayandırıldı', 'info');
-    }
+    MotoApp.showToast('Yer paylaşımı dayandırıldı', 'info');
+    this.updateRidersOnline();
   },
 
   /* ──────────────────────────────────────────────
      DISPLAY OTHER USERS
   ────────────────────────────────────────────── */
   loadActiveLocations() {
-    /* Clear old markers */
     Object.keys(this.markers).forEach((id) => this.removeUserMarker(id));
 
-    /* Demo users */
     this.DEMO_USERS.forEach((u) => this.addUserMarker(u));
 
-    /* Shared locations from storage */
-    if (typeof MotoStorage !== 'undefined') {
+    if (typeof MotoStorage !== 'undefined' && MotoStorage.getSharedLocations) {
       const shared = MotoStorage.getSharedLocations() || [];
       shared.forEach((loc) => {
         if (!this.markers[loc.userId]) {
@@ -428,11 +699,12 @@ const MotoMap = {
         }
       });
     }
+
+    this.updateRidersOnline();
   },
 
   addUserMarker(userData) {
     if (!this.map || !userData.coords) return;
-
     const icon = this.createCustomIcon(userData);
     const marker = L.marker(userData.coords, { icon: icon }).addTo(this.map);
     marker.bindPopup(this.createUserPopup(userData));
@@ -475,7 +747,6 @@ const MotoMap = {
      DISPLAY ALERTS ON MAP
   ────────────────────────────────────────────── */
   loadAlerts() {
-    /* Clear old */
     Object.keys(this.alertMarkers).forEach((id) => {
       this.map.removeLayer(this.alertMarkers[id]);
       delete this.alertMarkers[id];
@@ -512,9 +783,7 @@ const MotoMap = {
       popupAnchor: [0, -24],
     });
 
-    const marker = L.marker([alertData.lat, alertData.lng], { icon: icon }).addTo(
-      this.map
-    );
+    const marker = L.marker([alertData.lat, alertData.lng], { icon: icon }).addTo(this.map);
     marker.bindPopup(this.createAlertPopup(alertData, typeInfo));
     this.alertMarkers[alertData.id] = marker;
   },
@@ -550,9 +819,7 @@ const MotoMap = {
       popupAnchor: [0, -50],
     });
 
-    const marker = L.marker([eventData.lat, eventData.lng], { icon: icon }).addTo(
-      this.map
-    );
+    const marker = L.marker([eventData.lat, eventData.lng], { icon: icon }).addTo(this.map);
     marker.bindPopup(this.createEventPopup(eventData));
     this.eventMarkers[eventData.id] = marker;
   },
@@ -573,9 +840,6 @@ const MotoMap = {
         <strong class="popup-name">${user.name}</strong>
         <div class="popup-moto">${user.moto || ''}</div>
         <div class="popup-status" style="color:${user.color || '#ccc'}">${statusText}</div>
-        <button class="popup-btn" onclick="MotoApp.showToast('Mesaj funksiyası tezliklə!', 'info')">
-          💬 Mesaj
-        </button>
       </div>
     `;
   },
@@ -614,150 +878,35 @@ const MotoMap = {
   ────────────────────────────────────────────── */
   showShareModeModal(callback) {
     const html = `
-      <div class="share-mode-options">
-        <button class="share-mode-btn" data-mode="friends">
-          <span class="share-mode-icon">👥</span>
-          <span class="share-mode-label">Dostlar</span>
-          <span class="share-mode-desc">Yalnız dostlarınız görəcək</span>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button class="share-mode-btn" data-mode="friends" style="display:flex; align-items:center; gap:14px; padding:16px; background:rgba(26,26,46,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:14px; cursor:pointer; transition: all 0.2s; text-align:left;" onmouseover="this.style.borderColor='rgba(255,107,53,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+          <span style="font-size:1.6rem;">👥</span>
+          <div>
+            <div style="font-weight:600; color:#ddd; font-size:0.9rem;">Dostlar</div>
+            <div style="font-size:0.75rem; color:#777; margin-top:2px;">Yalnız dostlarınız görəcək</div>
+          </div>
         </button>
-        <button class="share-mode-btn" data-mode="community">
-          <span class="share-mode-icon">🌍</span>
-          <span class="share-mode-label">Bütün İcma</span>
-          <span class="share-mode-desc">Hər kəs görəcək</span>
+        <button class="share-mode-btn" data-mode="community" style="display:flex; align-items:center; gap:14px; padding:16px; background:rgba(26,26,46,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:14px; cursor:pointer; transition: all 0.2s; text-align:left;" onmouseover="this.style.borderColor='rgba(255,107,53,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+          <span style="font-size:1.6rem;">🌍</span>
+          <div>
+            <div style="font-weight:600; color:#ddd; font-size:0.9rem;">Bütün İcma</div>
+            <div style="font-size:0.75rem; color:#777; margin-top:2px;">Hər kəs görəcək</div>
+          </div>
         </button>
       </div>
     `;
 
-    if (typeof MotoApp !== 'undefined') {
-      MotoApp.openModal(html, 'Paylaşım Rejimi');
+    MotoApp.openModal(html, 'Paylaşım Rejimi');
 
-      setTimeout(() => {
-        document.querySelectorAll('.share-mode-btn').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            const mode = btn.dataset.mode;
-            MotoApp.closeModal();
-            if (callback) callback(mode);
-          });
+    setTimeout(() => {
+      document.querySelectorAll('.share-mode-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.mode;
+          MotoApp.closeModal();
+          if (callback) callback(mode);
         });
-      }, 100);
-    }
-  },
-
-  /* ──────────────────────────────────────────────
-     RIDING PANEL
-  ────────────────────────────────────────────── */
-  showRidingPanel() {
-    let panel = document.getElementById('riding-panel');
-    if (!panel) {
-      panel = document.createElement('div');
-      panel.id = 'riding-panel';
-      panel.className = 'riding-panel';
-      panel.innerHTML = `
-        <div class="riding-stats">
-          <div class="riding-stat">
-            <span class="riding-stat-icon">⏱️</span>
-            <span class="riding-stat-label">Vaxt</span>
-            <span class="riding-stat-value" id="ride-time">00:00</span>
-          </div>
-          <div class="riding-stat">
-            <span class="riding-stat-icon">📏</span>
-            <span class="riding-stat-label">Məsafə</span>
-            <span class="riding-stat-value" id="ride-distance">0.00 km</span>
-          </div>
-          <div class="riding-stat">
-            <span class="riding-stat-icon">🏎️</span>
-            <span class="riding-stat-label">Sürət</span>
-            <span class="riding-stat-value" id="ride-speed">0 km/s</span>
-          </div>
-        </div>
-        <button class="btn-danger ride-stop-btn" id="ride-stop-btn">
-          🛑 Bitir
-        </button>
-      `;
-      const mapPage = document.getElementById('page-map');
-      if (mapPage) {
-        mapPage.appendChild(panel);
-      } else {
-        document.body.appendChild(panel);
-      }
-
-      document
-        .getElementById('ride-stop-btn')
-        .addEventListener('click', () => this.stopRiding());
-    }
-    panel.classList.add('active');
-  },
-
-  hideRidingPanel() {
-    const panel = document.getElementById('riding-panel');
-    if (panel) panel.classList.remove('active');
-  },
-
-  /* ──────────────────────────────────────────────
-     LOCATION SHARE PANEL
-  ────────────────────────────────────────────── */
-  showLocationSharePanel() {
-    let panel = document.getElementById('location-share-panel');
-    if (!panel) {
-      panel = document.createElement('div');
-      panel.id = 'location-share-panel';
-      panel.className = 'location-share-panel';
-      panel.innerHTML = `
-        <h3 class="share-panel-title">📍 Canlı Yer Paylaşımı</h3>
-        <div class="share-panel-actions">
-          <button class="btn-primary share-action-btn" id="btn-start-ride">
-            🏍️ Sürüşə Başla
-          </button>
-          <button class="btn-secondary share-action-btn" id="btn-share-location">
-            📌 Haradayam Paylaş
-          </button>
-        </div>
-        <div class="share-panel-input" id="share-msg-container" style="display:none;">
-          <input type="text" id="share-message-input" class="input-field"
-                 placeholder="Mesaj əlavə et (istəyə bağlı)..." maxlength="100" />
-          <div class="share-panel-row">
-            <button class="btn-primary btn-sm" id="btn-send-share">Paylaş</button>
-            <button class="btn-ghost btn-sm" id="btn-cancel-share">Ləğv et</button>
-          </div>
-        </div>
-      `;
-      const mapPage = document.getElementById('page-map');
-      if (mapPage) {
-        mapPage.appendChild(panel);
-      } else {
-        document.body.appendChild(panel);
-      }
-
-      /* Bind buttons */
-      document.getElementById('btn-start-ride').addEventListener('click', () => {
-        this.hideLocationSharePanel();
-        this.showShareModeModal((mode) => this.startRiding(mode));
       });
-
-      document
-        .getElementById('btn-share-location')
-        .addEventListener('click', () => {
-          document.getElementById('share-msg-container').style.display = 'block';
-        });
-
-      document.getElementById('btn-send-share').addEventListener('click', () => {
-        const msg = document.getElementById('share-message-input').value;
-        this.hideLocationSharePanel();
-        this.showShareModeModal((mode) => this.shareStaticLocation(msg, mode));
-      });
-
-      document
-        .getElementById('btn-cancel-share')
-        .addEventListener('click', () => {
-          document.getElementById('share-msg-container').style.display = 'none';
-        });
-    }
-    panel.classList.add('active');
-  },
-
-  hideLocationSharePanel() {
-    const panel = document.getElementById('location-share-panel');
-    if (panel) panel.classList.remove('active');
+    }, 100);
   },
 
   /* ──────────────────────────────────────────────
@@ -783,46 +932,27 @@ const MotoMap = {
   },
 
   /* ──────────────────────────────────────────────
-     DEMO ANIMATION (simulate moving users)
+     DEMO ANIMATION (no demo users)
   ────────────────────────────────────────────── */
-  startDemoAnimation() {
-    if (!this.DEMO_USERS.length) return; // No demo users to animate
-    const offsets = this.DEMO_USERS.map(() => ({
-      latOff: 0,
-      lngOff: 0,
-      dLat: (Math.random() - 0.5) * 0.0004,
-      dLng: (Math.random() - 0.5) * 0.0004,
-    }));
-
-    const animate = () => {
-      this.DEMO_USERS.forEach((user, i) => {
-        if (user.status !== 'riding') return;
-        const m = this.markers[user.id];
-        if (!m) return;
-
-        offsets[i].latOff += offsets[i].dLat;
-        offsets[i].lngOff += offsets[i].dLng;
-
-        /* Reverse direction when drifted too far */
-        if (Math.abs(offsets[i].latOff) > 0.005) offsets[i].dLat *= -1;
-        if (Math.abs(offsets[i].lngOff) > 0.005) offsets[i].dLng *= -1;
-
-        const newLat = user.coords[0] + offsets[i].latOff;
-        const newLng = user.coords[1] + offsets[i].lngOff;
-        m.setLatLng([newLat, newLng]);
-      });
-
-      this.demoAnimationId = setTimeout(animate, 3000);
-    };
-
-    this.demoAnimationId = setTimeout(animate, 5000);
-  },
-
+  startDemoAnimation() { /* No demo users */ },
   stopDemoAnimation() {
     if (this.demoAnimationId) {
       clearTimeout(this.demoAnimationId);
       this.demoAnimationId = null;
     }
+  },
+
+  /* ──────────────────────────────────────────────
+     BACKWARD COMPAT — old panel methods
+  ────────────────────────────────────────────── */
+  showRidingPanel() { this.showDashboard(); },
+  hideRidingPanel() { this.hideDashboard(); },
+  updateRideStats(speed) { this.updateDashboard(speed); },
+  showLocationSharePanel() {
+    this.expandFAB();
+  },
+  hideLocationSharePanel() {
+    this.collapseFAB();
   },
 
   /* ──────────────────────────────────────────────
