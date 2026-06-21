@@ -582,10 +582,6 @@ const MotoAuth = {
       // Set as current user
       MotoStorage.setCurrentUser(newUser);
 
-      // Create some initial friend requests for demo purposes
-      MotoStorage.sendFriendRequest('demo_user_001', newUser.id);
-      MotoStorage.sendFriendRequest('demo_user_003', newUser.id);
-
       this.setLoading(nextBtn, false);
 
       if (typeof MotoNotifications !== 'undefined') {
@@ -600,8 +596,8 @@ const MotoAuth = {
       this._resetRegistration();
 
       // Transition to main app
-      if (typeof MotoApp !== 'undefined' && MotoApp.showMainApp) {
-        MotoApp.showMainApp();
+      if (typeof MotoApp !== 'undefined' && MotoApp.onLogin) {
+        MotoApp.onLogin();
       }
     }, 1000);
   },
