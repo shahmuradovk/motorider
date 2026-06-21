@@ -136,24 +136,29 @@ const MotoMap = {
     }
 
     if (startRide) {
-      startRide.addEventListener('click', () => {
+      startRide.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.collapseFAB();
         this.showShareModeModal((mode) => this.startRiding(mode));
       });
     }
 
     if (shareLocation) {
-      shareLocation.addEventListener('click', () => {
+      shareLocation.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.collapseFAB();
         this.showShareModeModal((mode) => this.shareStaticLocation('', mode));
       });
     }
 
     if (reportDanger) {
-      reportDanger.addEventListener('click', () => {
+      reportDanger.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.collapseFAB();
         if (typeof MotoAlerts !== 'undefined') {
           MotoAlerts.showCreateForm();
+        } else {
+          MotoApp.showToast('Xəbərdarlıq modulu yüklənməyib', 'error');
         }
       });
     }
