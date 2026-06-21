@@ -139,7 +139,9 @@ const MotoAuth = {
       MotoStorage.updateUser(user.id, { lastSeen: new Date().toISOString(), isOnline: true });
 
       this.setLoading(loginBtn, false);
-      MotoNotifications.show('Xoş gəldiniz, ' + user.firstName + '! 🏍️', 'success');
+      if (typeof MotoNotifications !== 'undefined') {
+        MotoNotifications.show('Xoş gəldiniz, ' + user.firstName + '! 🏍️', 'success');
+      }
 
       // Transition to main app
       if (typeof MotoApp !== 'undefined' && MotoApp.onLogin) {
