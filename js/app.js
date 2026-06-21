@@ -14,55 +14,59 @@ const MotoApp = {
   init() {
     console.log('🏍️ MotoApp: Başladılır...');
 
-    // 1. Initialize storage & seed demo data
-    if (typeof MotoStorage !== 'undefined') {
-      MotoStorage.init();
-      console.log('✅ MotoStorage hazır');
-    }
+    // ALWAYS hide splash after 2s, even if errors occur
+    setTimeout(() => this.hideSplash(), 2000);
 
-    // 2. Initialize API layer
-    if (typeof MotoAPI !== 'undefined') {
-      MotoAPI.init();
-      console.log('✅ MotoAPI hazır');
-    }
-
-    // 3. Initialize notifications
-    if (typeof MotoNotifications !== 'undefined') {
-      MotoNotifications.init();
-      console.log('✅ MotoNotifications hazır');
-    }
-
-    // 4. Setup bottom nav clicks
-    this.setupBottomNav();
-
-    // 5. Setup modal
-    this.setupModal();
-
-    // 6. Setup header buttons
-    this.setupHeader();
-
-    // 7. Check user session
-    const hasSession = typeof MotoAuth !== 'undefined' && MotoAuth.checkSession();
-
-    if (hasSession) {
-      console.log('✅ Session tapıldı, əsas tətbiq göstərilir');
-      this.isLoggedIn = true;
-      this.showMainApp();
-      this.initAllModules();
-    } else {
-      console.log('ℹ️ Session yoxdur, giriş forması göstərilir');
-      this.showAuth();
-      if (typeof MotoAuth !== 'undefined') {
-        MotoAuth.init();
+    try {
+      // 1. Initialize storage & seed demo data
+      if (typeof MotoStorage !== 'undefined') {
+        MotoStorage.init();
+        console.log('✅ MotoStorage hazır');
       }
+
+      // 2. Initialize API layer
+      if (typeof MotoAPI !== 'undefined') {
+        MotoAPI.init();
+        console.log('✅ MotoAPI hazır');
+      }
+
+      // 3. Initialize notifications
+      if (typeof MotoNotifications !== 'undefined') {
+        MotoNotifications.init();
+        console.log('✅ MotoNotifications hazır');
+      }
+
+      // 4. Setup bottom nav clicks
+      this.setupBottomNav();
+
+      // 5. Setup modal
+      this.setupModal();
+
+      // 6. Setup header buttons
+      this.setupHeader();
+
+      // 7. Check user session
+      const hasSession = typeof MotoAuth !== 'undefined' && MotoAuth.checkSession();
+
+      if (hasSession) {
+        console.log('✅ Session tapıldı, əsas tətbiq göstərilir');
+        this.isLoggedIn = true;
+        this.showMainApp();
+        this.initAllModules();
+      } else {
+        console.log('ℹ️ Session yoxdur, giriş forması göstərilir');
+        this.showAuth();
+        if (typeof MotoAuth !== 'undefined') {
+          MotoAuth.init();
+        }
+      }
+
+      console.log('🏍️ MotoApp: Hazırdır!');
+    } catch (err) {
+      console.error('❌ MotoApp init xətası:', err);
+      // Still show auth if something crashes
+      this.showAuth();
     }
-
-    // 8. Hide splash after 2s
-    setTimeout(() => {
-      this.hideSplash();
-    }, 2000);
-
-    console.log('🏍️ MotoApp: Hazırdır!');
   },
 
   /* ──────────────────────────────────────────────

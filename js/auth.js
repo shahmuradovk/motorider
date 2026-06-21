@@ -82,6 +82,7 @@ const MotoAuth = {
 
   _bindLoginEvents() {
     const form = document.getElementById('login-form');
+    if (!form) return;
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
