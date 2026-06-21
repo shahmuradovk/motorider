@@ -1,3 +1,9 @@
+# API redirects — route /api/* to Netlify Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
 [[headers]]
   for = "/js/*"
   [headers.values]
