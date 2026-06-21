@@ -410,14 +410,31 @@ const MotoAuth = {
       emailDisplay.textContent = email;
     }
 
-    // Show code in a toast (simulating email)
-    if (typeof MotoNotifications !== 'undefined') {
-      MotoNotifications.show(
-        `📧 Təsdiq kodu: ${this.verificationCode} (simulyasiya — real tətbiqdə emailə göndəriləcək)`,
-        'info',
-        10000
-      );
-    }
+    // Send real email via API
+    fetch('/.netlify/functions/send-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, code: this.verificationCode })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (typeof MotoNotifications !== 'undefined') {
+          MotoNotifications.show('📧 Təsdiq kodu emailinizə göndərildi!', 'success', 5000);
+        }
+      } else {
+        console.error('Email göndərmə xətası:', data.error);
+        if (typeof MotoNotifications !== 'undefined') {
+          MotoNotifications.show('⚠️ Email göndərilə bilmədi. Kod: ' + this.verificationCode, 'warning', 15000);
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Email API xətası:', err);
+      if (typeof MotoNotifications !== 'undefined') {
+        MotoNotifications.show('⚠️ Email göndərilə bilmədi. Kod: ' + this.verificationCode, 'warning', 15000);
+      }
+    });
 
     // Start resend timer
     this.startResendTimer(60);
