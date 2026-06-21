@@ -12,76 +12,69 @@ const MotoApp = {
      INIT
   ────────────────────────────────────────────── */
   init() {
-    // 1. Show splash
-    this.showSplash();
+    console.log('🏍️ MotoApp: Başladılır...');
 
-    // 2. Initialize storage & seed demo data
+    // 1. Initialize storage & seed demo data
     if (typeof MotoStorage !== 'undefined') {
       MotoStorage.init();
+      console.log('✅ MotoStorage hazır');
+    }
+
+    // 2. Initialize API layer
+    if (typeof MotoAPI !== 'undefined') {
+      MotoAPI.init();
+      console.log('✅ MotoAPI hazır');
     }
 
     // 3. Initialize notifications
     if (typeof MotoNotifications !== 'undefined') {
       MotoNotifications.init();
+      console.log('✅ MotoNotifications hazır');
     }
 
-    // 4. Build the bottom nav
-    this.buildBottomNav();
+    // 4. Setup bottom nav clicks
+    this.setupBottomNav();
 
-    // 5. Build the modal container
-    this.buildModalContainer();
+    // 5. Setup modal
+    this.setupModal();
 
-    // 6. Check user session
-    const hasSession =
-      typeof MotoAuth !== 'undefined' && MotoAuth.checkSession();
+    // 6. Setup header buttons
+    this.setupHeader();
+
+    // 7. Check user session
+    const hasSession = typeof MotoAuth !== 'undefined' && MotoAuth.checkSession();
 
     if (hasSession) {
+      console.log('✅ Session tapıldı, əsas tətbiq göstərilir');
       this.isLoggedIn = true;
       this.showMainApp();
       this.initAllModules();
     } else {
+      console.log('ℹ️ Session yoxdur, giriş forması göstərilir');
       this.showAuth();
       if (typeof MotoAuth !== 'undefined') {
         MotoAuth.init();
       }
     }
 
-    // 7. Hide splash after 2 s
-    this.splashTimeout = setTimeout(() => {
+    // 8. Hide splash after 2s
+    setTimeout(() => {
       this.hideSplash();
     }, 2000);
+
+    console.log('🏍️ MotoApp: Hazırdır!');
   },
 
   /* ──────────────────────────────────────────────
      SPLASH
   ────────────────────────────────────────────── */
-  showSplash() {
-    let splash = document.getElementById('splash-screen');
-    if (!splash) {
-      splash = document.createElement('div');
-      splash.id = 'splash-screen';
-      splash.innerHTML = `
-        <div class="splash-content">
-          <div class="splash-logo">🏍️</div>
-          <h1 class="splash-title">MotoRiders</h1>
-          <p class="splash-subtitle">Bakı Motosiklet İcması</p>
-          <div class="splash-loader">
-            <div class="splash-loader-bar"></div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(splash);
-    }
-    splash.classList.add('active');
-  },
-
   hideSplash() {
     const splash = document.getElementById('splash-screen');
     if (splash) {
-      splash.classList.add('fade-out');
+      splash.style.opacity = '0';
+      splash.style.transition = 'opacity 0.6s ease';
       setTimeout(() => {
-        splash.classList.remove('active', 'fade-out');
-        splash.remove();
+        splash.style.display = 'none';
       }, 600);
     }
   },
@@ -90,39 +83,129 @@ const MotoApp = {
      AUTH / MAIN VIEW SWITCHING
   ────────────────────────────────────────────── */
   showAuth() {
-    const authScreen = document.getElementById('auth-screen');
+    const authContainer = document.getElementById('auth-container');
     const mainApp = document.getElementById('main-app');
-    if (authScreen) authScreen.classList.add('active');
-    if (mainApp) mainApp.classList.remove('active');
-    const bottomNav = document.getElementById('bottom-nav');
-    if (bottomNav) bottomNav.classList.remove('active');
+    const bottomNav = document.querySelector('.bottom-nav');
+
+    if (authContainer) {
+      authContainer.classList.remove('hidden');
+      authContainer.style.display = '';
+    }
+    if (mainApp) {
+      mainApp.classList.add('hidden');
+      mainApp.style.display = 'none';
+    }
+    if (bottomNav) {
+      bottomNav.style.display = 'none';
+    }
+    console.log('📋 Auth ekranı göstərildi');
   },
 
   showMainApp() {
-    const authScreen = document.getElementById('auth-screen');
+    const authContainer = document.getElementById('auth-container');
     const mainApp = document.getElementById('main-app');
-    if (authScreen) authScreen.classList.remove('active');
-    if (mainApp) mainApp.classList.add('active');
-    const bottomNav = document.getElementById('bottom-nav');
-    if (bottomNav) bottomNav.classList.add('active');
+    const bottomNav = document.querySelector('.bottom-nav');
+
+    if (authContainer) {
+      authContainer.classList.add('hidden');
+      authContainer.style.display = 'none';
+    }
+    if (mainApp) {
+      mainApp.classList.remove('hidden');
+      mainApp.style.display = '';
+    }
+    if (bottomNav) {
+      bottomNav.style.display = '';
+    }
+
     this.isLoggedIn = true;
+    this.updateProfile();
     this.navigateTo('map');
+    console.log('🗺️ Əsas tətbiq göstərildi');
+  },
+
+  /* ──────────────────────────────────────────────
+     PROFILE UPDATE
+  ────────────────────────────────────────────── */
+  updateProfile() {
+    const user = typeof MotoStorage !== 'undefined' ? MotoStorage.getCurrentUser() : null;
+    if (!user) return;
+
+    // Header avatar
+    const headerInitials = document.getElementById('header-avatar-initials');
+    const headerAvatar = document.getElementById('header-avatar');
+    if (headerInitials) {
+      const initials = (user.firstName || user.first_name || '').charAt(0) + (user.lastName || user.last_name || '').charAt(0);
+      headerInitials.textContent = initials.toUpperCase();
+    }
+    if (headerAvatar) {
+      headerAvatar.style.background = user.avatarColor || user.avatar_color || 'var(--gradient-primary)';
+    }
+
+    // Profile page
+    const profileName = document.getElementById('profile-name');
+    const profileBikeText = document.getElementById('profile-bike-text');
+    const profileEmail = document.getElementById('profile-email');
+    const profileInitials = document.getElementById('profile-avatar-initials');
+    const profileAvatar = document.getElementById('profile-avatar');
+
+    if (profileName) {
+      profileName.textContent = `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`;
+    }
+    if (profileBikeText) {
+      profileBikeText.textContent = `${user.motoBrand || user.moto_brand || ''} ${user.motoModel || user.moto_model || ''} ${user.motoCc || user.moto_cc || ''}cc`;
+    }
+    if (profileEmail) {
+      profileEmail.textContent = user.email || '';
+    }
+    if (profileInitials) {
+      const initials = (user.firstName || user.first_name || '').charAt(0) + (user.lastName || user.last_name || '').charAt(0);
+      profileInitials.textContent = initials.toUpperCase();
+    }
+    if (profileAvatar) {
+      profileAvatar.style.background = user.avatarColor || user.avatar_color || 'var(--gradient-primary)';
+    }
+
+    // Stats
+    const statRides = document.getElementById('stat-rides');
+    const statKm = document.getElementById('stat-km');
+    const statEvents = document.getElementById('stat-events');
+    const statFriends = document.getElementById('stat-friends');
+
+    if (statRides) statRides.textContent = user.totalRides || user.total_rides || 0;
+    if (statKm) statKm.textContent = Math.round(user.totalKm || user.total_km || 0);
+    if (statEvents) {
+      const events = typeof MotoStorage !== 'undefined' ? MotoStorage.getEvents() : [];
+      const myEvents = events.filter(e => e.creatorId === user.id || (e.participants && e.participants.includes(user.id)));
+      statEvents.textContent = myEvents.length;
+    }
+    if (statFriends) {
+      const friends = typeof MotoStorage !== 'undefined' ? MotoStorage.getFriends(user.id) : [];
+      statFriends.textContent = friends.length;
+    }
   },
 
   /* ──────────────────────────────────────────────
      SPA ROUTING
   ────────────────────────────────────────────── */
   navigateTo(page) {
-    /* 'live' is a variant of map that opens the live panel */
     const isLive = page === 'live';
     const actualPage = isLive ? 'map' : page;
 
     // Hide all pages
-    const pages = document.querySelectorAll('.app-page');
-    pages.forEach((p) => this.hidePage(p.id));
+    const pages = document.querySelectorAll('.page');
+    pages.forEach(p => {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
 
     // Show target page
-    this.showPage(`page-${actualPage}`);
+    const targetPage = document.getElementById(`page-${actualPage}`);
+    if (targetPage) {
+      targetPage.classList.add('active');
+      targetPage.style.display = '';
+    }
+
     this.currentPage = actualPage;
     this.updateBottomNav(page);
 
@@ -130,7 +213,9 @@ const MotoApp = {
     switch (actualPage) {
       case 'map':
         if (typeof MotoMap !== 'undefined') {
-          MotoMap.map && MotoMap.map.invalidateSize();
+          if (MotoMap.map) {
+            setTimeout(() => MotoMap.map.invalidateSize(), 100);
+          }
           if (isLive) {
             MotoMap.showLocationSharePanel();
           }
@@ -143,18 +228,18 @@ const MotoApp = {
         if (typeof MotoAlerts !== 'undefined') MotoAlerts.renderAlerts();
         break;
       case 'friends':
-        if (typeof MotoFriends !== 'undefined') MotoFriends.renderFriendsList();
+        if (typeof MotoFriends !== 'undefined') MotoFriendsList ? MotoFriends.renderFriendsList() : null;
         break;
       case 'profile':
-        if (typeof MotoProfile !== 'undefined') MotoProfile.render();
+        this.updateProfile();
         break;
     }
   },
 
   updateBottomNav(page) {
-    const items = document.querySelectorAll('.nav-item');
-    items.forEach((item) => {
-      if (item.dataset.page === page) {
+    const items = document.querySelectorAll('.bottom-nav .nav-item');
+    items.forEach(item => {
+      if (item.dataset.page === page || (page === 'live' && item.dataset.page === 'map')) {
         item.classList.add('active');
       } else {
         item.classList.remove('active');
@@ -162,121 +247,95 @@ const MotoApp = {
     });
   },
 
-  showPage(pageId) {
-    const el = document.getElementById(pageId);
-    if (el) {
-      el.classList.add('active');
-      el.style.display = '';
-    }
-  },
-
-  hidePage(pageId) {
-    const el = document.getElementById(pageId);
-    if (el) {
-      el.classList.remove('active');
-      el.style.display = 'none';
-    }
-  },
-
   /* ──────────────────────────────────────────────
-     BOTTOM NAV (built at runtime)
+     SETUP BOTTOM NAV
   ────────────────────────────────────────────── */
-  buildBottomNav() {
-    let nav = document.getElementById('bottom-nav');
-    if (nav) return; // already exists
-
-    nav = document.createElement('nav');
-    nav.id = 'bottom-nav';
-    nav.className = 'bottom-nav';
-
-    const items = [
-      { page: 'map', icon: '🗺️', label: 'Xəritə' },
-      { page: 'live', icon: '📍', label: 'Canlı' },
-      { page: 'events', icon: '🏍️', label: 'Tədbirlər' },
-      { page: 'alerts', icon: '⚠️', label: 'Xəbərdarlıq' },
-      { page: 'profile', icon: '👤', label: 'Profil' },
-    ];
-
-    items.forEach((item) => {
-      const btn = document.createElement('button');
-      btn.className = 'nav-item';
-      btn.dataset.page = item.page;
-      btn.innerHTML = `
-        <span class="nav-icon">${item.icon}</span>
-        <span class="nav-label">${item.label}</span>
-      `;
-      btn.addEventListener('click', () => {
-        this.navigateTo(item.page);
+  setupBottomNav() {
+    const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const page = item.dataset.page;
+        if (page) this.navigateTo(page);
       });
-      nav.appendChild(btn);
     });
-
-    document.body.appendChild(nav);
   },
 
   /* ──────────────────────────────────────────────
-     MODAL SYSTEM
+     SETUP HEADER
   ────────────────────────────────────────────── */
-  buildModalContainer() {
-    if (document.getElementById('app-modal')) return;
+  setupHeader() {
+    // Profile button -> navigate to profile
+    const profileBtn = document.getElementById('header-profile-btn');
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => this.navigateTo('profile'));
+    }
 
-    const overlay = document.createElement('div');
-    overlay.id = 'app-modal';
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-      <div class="modal-container">
-        <div class="modal-header">
-          <h3 class="modal-title"></h3>
-          <button class="modal-close" id="modal-close-btn">&times;</button>
-        </div>
-        <div class="modal-body" id="modal-body"></div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
+    // Notification button
+    const notifBtn = document.getElementById('notification-btn');
+    const notifDropdown = document.getElementById('notification-dropdown');
+    if (notifBtn && notifDropdown) {
+      notifBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notifDropdown.classList.toggle('hidden');
+      });
+      document.addEventListener('click', (e) => {
+        if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
+          notifDropdown.classList.add('hidden');
+        }
+      });
+    }
 
-    // Close on overlay click
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) this.closeModal();
-    });
+    // Logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (typeof MotoAuth !== 'undefined') {
+          MotoAuth.logout();
+        } else {
+          MotoStorage.logout();
+          this.onLogout();
+        }
+      });
+    }
+  },
 
-    // Close button
-    document
-      .getElementById('modal-close-btn')
-      .addEventListener('click', () => this.closeModal());
+  /* ──────────────────────────────────────────────
+     SETUP MODAL
+  ────────────────────────────────────────────── */
+  setupModal() {
+    const modalOverlay = document.getElementById('modal-container');
+    const modalClose = document.getElementById('modal-close-btn');
 
-    // ESC key
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) this.closeModal();
+      });
+    }
+    if (modalClose) {
+      modalClose.addEventListener('click', () => this.closeModal());
+    }
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.closeModal();
     });
   },
 
   openModal(contentHtml, title) {
-    const modal = document.getElementById('app-modal');
-    const modalTitle = modal.querySelector('.modal-title');
+    const modal = document.getElementById('modal-container');
+    const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
     if (!modal || !modalBody) return;
 
-    modalTitle.textContent = title || '';
+    if (modalTitle) modalTitle.textContent = title || '';
     modalBody.innerHTML = contentHtml;
-    modal.classList.add('active');
+    modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-
-    // Animate in
-    requestAnimationFrame(() => {
-      const container = modal.querySelector('.modal-container');
-      if (container) container.classList.add('show');
-    });
   },
 
   closeModal() {
-    const modal = document.getElementById('app-modal');
+    const modal = document.getElementById('modal-container');
     if (!modal) return;
-    const container = modal.querySelector('.modal-container');
-    if (container) container.classList.remove('show');
-    setTimeout(() => {
-      modal.classList.remove('active');
-      document.body.style.overflow = '';
-    }, 300);
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
   },
 
   /* ──────────────────────────────────────────────
@@ -287,6 +346,7 @@ const MotoApp = {
     if (typeof MotoEvents !== 'undefined') MotoEvents.init();
     if (typeof MotoAlerts !== 'undefined') MotoAlerts.init();
     if (typeof MotoFriends !== 'undefined') MotoFriends.init();
+    console.log('✅ Bütün modullar hazır');
   },
 
   /* ──────────────────────────────────────────────
@@ -296,7 +356,6 @@ const MotoApp = {
     if (typeof MotoMap !== 'undefined') {
       MotoMap.loadActiveLocations();
       MotoMap.loadAlerts();
-      MotoMap.loadEvents();
     }
     if (typeof MotoEvents !== 'undefined') MotoEvents.renderEvents();
     if (typeof MotoAlerts !== 'undefined') MotoAlerts.renderAlerts();
@@ -304,7 +363,7 @@ const MotoApp = {
   },
 
   /* ──────────────────────────────────────────────
-     LOGIN CALLBACK (called by MotoAuth on success)
+     LOGIN / LOGOUT CALLBACKS
   ────────────────────────────────────────────── */
   onLogin() {
     this.isLoggedIn = true;
@@ -314,39 +373,23 @@ const MotoApp = {
 
   onLogout() {
     this.isLoggedIn = false;
-    if (typeof MotoMap !== 'undefined') {
+    if (typeof MotoMap !== 'undefined' && MotoMap.stopWatching) {
       MotoMap.stopWatching();
-      MotoMap.stopRiding();
     }
     this.showAuth();
     if (typeof MotoAuth !== 'undefined') MotoAuth.init();
   },
 
   /* ──────────────────────────────────────────────
-     TOAST NOTIFICATIONS (light helper)
+     TOAST HELPER
   ────────────────────────────────────────────── */
   showToast(message, type) {
-    // type = 'success' | 'error' | 'warning' | 'info'
-    type = type || 'info';
-    const colors = {
-      success: '#22c55e',
-      error: '#ff3333',
-      warning: '#ffaa00',
-      info: '#3b82f6',
-    };
-    const toast = document.createElement('div');
-    toast.className = 'app-toast';
-    toast.style.setProperty('--toast-color', colors[type] || colors.info);
-    toast.innerHTML = `<span>${message}</span>`;
-    document.body.appendChild(toast);
-
-    requestAnimationFrame(() => toast.classList.add('show'));
-
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 400);
-    }, 3500);
-  },
+    if (typeof MotoNotifications !== 'undefined') {
+      MotoNotifications.show(message, type || 'info');
+    } else {
+      console.log(`[${type}] ${message}`);
+    }
+  }
 };
 
 /* ════════════════════════════════════════════════
