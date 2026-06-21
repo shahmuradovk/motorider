@@ -20,7 +20,7 @@ const MotoStorage = {
   },
 
   // Current schema version — increment when adding migrations
-  CURRENT_SCHEMA_VERSION: 3,
+  CURRENT_SCHEMA_VERSION: 4,
 
   // ─── Default field values for user schema ──────────────────
   USER_DEFAULTS: {
@@ -111,6 +111,7 @@ const MotoStorage = {
     if (storedVersion < 1) this._migrateToV1();
     if (storedVersion < 2) this._migrateToV2();
     if (storedVersion < 3) this._migrateToV3();
+    if (storedVersion < 4) this._migrateToV4();
 
     // Save current version
     localStorage.setItem(this.KEYS.SCHEMA_VERSION, this.CURRENT_SCHEMA_VERSION.toString());
@@ -231,6 +232,58 @@ const MotoStorage = {
       console.log('  ✅ Admin user yaradıldı: ' + this.ADMIN_EMAIL);
     } else {
       console.log('  ℹ️ Admin user mövcuddur');
+    }
+  },
+
+  // Migration v4: Seed demo riders for friend system
+  _migrateToV4() {
+    console.log('  → v4: Demo sürücülər əlavə edilir...');
+    const users = this.getUsers();
+
+    const demoRiders = [
+      { firstName: 'Elvin', lastName: 'Həsənov', email: 'elvin@demo.moto', motoBrand: 'Honda', motoModel: 'CB650R', motoCC: 649, bio: 'Gecə sürüşlərini sevirəm 🌙' },
+      { firstName: 'Rəşad', lastName: 'Məmmədli', email: 'reshad@demo.moto', motoBrand: 'Yamaha', motoModel: 'R6', motoCC: 599, bio: 'Track day həvəskarı 🏁' },
+      { firstName: 'Nigar', lastName: 'Əliyeva', email: 'nigar@demo.moto', motoBrand: 'Kawasaki', motoModel: 'Ninja 400', motoCC: 399, bio: 'Yeni başlayan amma cəsarətli 💪' },
+      { firstName: 'Tural', lastName: 'Quliyev', email: 'tural@demo.moto', motoBrand: 'BMW', motoModel: 'R1250GS', motoCC: 1254, bio: 'Adventure touring ❤️' },
+      { firstName: 'Aynur', lastName: 'Hüseynova', email: 'aynur@demo.moto', motoBrand: 'Ducati', motoModel: 'Monster 821', motoCC: 821, bio: 'Bakı-Quba yolunun aşiqi 🏔️' },
+    ];
+
+    let added = 0;
+    demoRiders.forEach(demo => {
+      const exists = users.find(u => u.email && u.email.toLowerCase() === demo.email.toLowerCase());
+      if (!exists) {
+        users.push({
+          id: this.generateId(),
+          firstName: demo.firstName,
+          lastName: demo.lastName,
+          birthdate: '1996-01-01',
+          email: demo.email,
+          phone: '',
+          password: '123456',
+          motoBrand: demo.motoBrand,
+          motoModel: demo.motoModel,
+          motoCC: demo.motoCC,
+          avatar: null,
+          bio: demo.bio,
+          role: 'user',
+          totalRides: Math.floor(Math.random() * 50) + 5,
+          totalKm: Math.floor(Math.random() * 2000) + 100,
+          totalEvents: Math.floor(Math.random() * 10),
+          rideHistory: [],
+          joinedAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
+          lastSeen: new Date().toISOString(),
+          isOnline: Math.random() > 0.5,
+          settings: { notifications: true, locationSharing: true, darkMode: true, sounds: true }
+        });
+        added++;
+      }
+    });
+
+    if (added > 0) {
+      this._write(this.KEYS.USERS, users);
+      console.log(`  ✅ ${added} demo sürücü əlavə edildi`);
+    } else {
+      console.log('  ℹ️ Demo sürücülər artıq mövcuddur');
     }
   },
 

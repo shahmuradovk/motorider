@@ -85,7 +85,7 @@ const MotoFriends = {
         <div class="p-empty">
           <span style="font-size: 2rem;">👥</span>
           <span>Hələ ki dostun yoxdur</span>
-          <span style="font-size: 0.72rem; color: #555;">Yuxarıdakı axtarışdan istifadəçi tap</span>
+          <span style="font-size: 0.72rem; color: #555;">Yuxarıdakı axtarışdan istifadəçi tap və ya aşağıdakı icma üzvlərinə dostluq göndər</span>
         </div>
       `;
     } else {
@@ -97,6 +97,46 @@ const MotoFriends = {
     }
 
     html += '</div>';
+
+    /* Sent requests section */
+    let sentRequests = [];
+    if (typeof MotoStorage !== 'undefined' && MotoStorage.getSentRequests) {
+      sentRequests = MotoStorage.getSentRequests(userId);
+    }
+
+    if (sentRequests.length > 0) {
+      html += `
+        <div class="p-section">
+          <div class="p-section-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            <h3>Göndərilən İstəklər (${sentRequests.length})</h3>
+          </div>
+          <div class="p-card" style="padding: 0;">
+      `;
+      sentRequests.forEach(req => {
+        const toUser = typeof MotoStorage !== 'undefined' && MotoStorage.getUserById
+          ? MotoStorage.getUserById(req.to) : null;
+        const name = toUser ? `${toUser.firstName || ''} ${toUser.lastName || ''}`.trim() || toUser.email : 'Naməlum';
+        const initials = toUser && typeof MotoStorage !== 'undefined'
+          ? MotoStorage.getInitials(toUser.firstName, toUser.lastName)
+          : name.charAt(0);
+        const bike = toUser && toUser.motoBrand ? `${toUser.motoBrand} ${toUser.motoModel || ''}` : '';
+
+        html += `
+          <div class="p-setting" style="gap: 12px;">
+            <div class="p-setting-left" style="flex: 1; min-width: 0;">
+              <div class="avatar" style="width: 40px; height: 40px; font-size: 0.8rem;">${initials}</div>
+              <div style="min-width: 0;">
+                <span class="p-setting-name">${this.escapeHtml(name)}</span>
+                <span class="p-setting-desc">${this.escapeHtml(bike)}${bike ? ' · ' : ''}Cavab gözlənilir...</span>
+              </div>
+            </div>
+            <span style="font-size: 0.72rem; color: #ffaa00; padding: 6px 12px; background: rgba(255,170,0,0.08); border-radius: 20px;">⏳ Gözləyir</span>
+          </div>
+        `;
+      });
+      html += '</div></div>';
+    }
 
     container.innerHTML = html;
   },
@@ -146,10 +186,11 @@ const MotoFriends = {
      FRIEND REQUEST CARD
   ────────────────────────────────────────────── */
   renderFriendRequestCard(request) {
-    const user =
-      typeof MotoStorage !== 'undefined' && MotoStorage.getUsers
-        ? MotoStorage.getUsers().find((u) => u.id === request.from || u.id === request.fromUserId)
-        : null;
+    const user = request.fromUser || (
+      typeof MotoStorage !== 'undefined' && MotoStorage.getUserById
+        ? MotoStorage.getUserById(request.from)
+        : null
+    );
 
     const name = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Naməlum';
     const initials = user && typeof MotoStorage !== 'undefined'
