@@ -227,7 +227,7 @@ const MotoApp = {
         if (typeof MotoAlerts !== 'undefined') MotoAlerts.renderAlerts();
         break;
       case 'friends':
-        if (typeof MotoFriends !== 'undefined') MotoFriendsList ? MotoFriends.renderFriendsList() : null;
+        if (typeof MotoFriends !== 'undefined') MotoFriends.renderFriendsList();
         break;
       case 'profile':
         this.updateProfile();

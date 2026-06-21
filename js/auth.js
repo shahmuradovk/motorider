@@ -19,7 +19,7 @@ const MotoAuth = {
     this._bindRegisterEvents();
     this._bindPasswordToggles();
     this._bindVerificationInputs();
-    this._bindDemoLogin();
+
   },
 
   // ═══════════════════════════════════════════════════════════
@@ -88,15 +88,6 @@ const MotoAuth = {
       const password = document.getElementById('login-password').value;
       this.handleLogin(email, password);
     });
-  },
-
-  _bindDemoLogin() {
-    const demoBtn = document.getElementById('demo-login-btn');
-    if (demoBtn) {
-      demoBtn.addEventListener('click', () => {
-        this.handleLogin('shahmuradovk@gmail.com', '123456');
-      });
-    }
   },
 
   handleLogin(email, password) {
