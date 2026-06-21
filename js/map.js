@@ -719,41 +719,52 @@ const MotoMap = {
      TƏHLÜKƏ BİLDİR — danger report on map
   ────────────────────────────────────────────── */
   startDangerReport() {
-    this.getCurrentLocation((pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+    /* Open modal IMMEDIATELY — don't wait for GPS */
+    const lat = this.BAKU_CENTER[0];
+    const lng = this.BAKU_CENTER[1];
 
-      const types = [
-        { id: 'accident', icon: '💥', label: 'Qəza' },
-        { id: 'pothole', icon: '🕳️', label: 'Çuxur' },
-        { id: 'construction', icon: '🚧', label: 'Yol təmiri' },
-        { id: 'traffic', icon: '🚗', label: 'Sıx trafik' },
-        { id: 'danger', icon: '⚠️', label: 'Digər təhlükə' },
-      ];
+    const types = [
+      { id: 'accident', icon: '💥', label: 'Qəza' },
+      { id: 'pothole', icon: '🕳️', label: 'Çuxur' },
+      { id: 'construction', icon: '🚧', label: 'Yol təmiri' },
+      { id: 'traffic', icon: '🚗', label: 'Sıx trafik' },
+      { id: 'danger', icon: '⚠️', label: 'Digər təhlükə' },
+    ];
 
-      let typeBtns = '';
-      types.forEach(t => {
-        typeBtns += `<button class="danger-type-btn" data-type="${t.id}" onclick="MotoMap._selectDangerType(this, '${t.id}')" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px; background:rgba(26,26,46,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; cursor:pointer; flex:1; min-width:60px;"><span style="font-size:1.5rem;">${t.icon}</span><span style="font-size:0.72rem; color:#999;">${t.label}</span></button>`;
-      });
+    let typeBtns = '';
+    types.forEach(t => {
+      typeBtns += `<button class="danger-type-btn" data-type="${t.id}" onclick="MotoMap._selectDangerType(this, '${t.id}')" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px; background:rgba(26,26,46,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; cursor:pointer; flex:1; min-width:60px;"><span style="font-size:1.5rem;">${t.icon}</span><span style="font-size:0.72rem; color:#999;">${t.label}</span></button>`;
+    });
 
-      const html = `
-        <div id="danger-report-form">
-          <p style="font-size:0.82rem; color:#999; margin-bottom:12px;">📍 Hazırkı yeriniz qeyd olunacaq</p>
-          <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">${typeBtns}</div>
-          <input type="hidden" id="danger-type" value="" />
-          <input type="hidden" id="danger-lat" value="${lat}" />
-          <input type="hidden" id="danger-lng" value="${lng}" />
-          <div class="p-edit-group" style="margin-bottom:14px;">
-            <label class="p-edit-label">Təsvir</label>
-            <textarea id="danger-desc" class="p-edit-input" rows="2" placeholder="Nə baş verir? Təsvir edin..." maxlength="200" style="resize:vertical;"></textarea>
-          </div>
-          <button class="p-edit-save" onclick="MotoMap._submitDangerReport()">
-            ⚠️ Təhlükəni Bildir
-          </button>
+    const html = `
+      <div id="danger-report-form">
+        <p style="font-size:0.82rem; color:#999; margin-bottom:12px;" id="danger-location-text">📍 Yer təyin olunur...</p>
+        <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">${typeBtns}</div>
+        <input type="hidden" id="danger-type" value="" />
+        <input type="hidden" id="danger-lat" value="${lat}" />
+        <input type="hidden" id="danger-lng" value="${lng}" />
+        <div style="margin-bottom:14px;">
+          <label style="display:block; font-size:0.82rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">Təsvir *</label>
+          <textarea id="danger-desc" style="width:100%; padding:12px; background:rgba(26,26,46,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:#eee; font-size:0.9rem; resize:vertical; min-height:60px;" rows="2" placeholder="Nə baş verir? Təsvir edin..." maxlength="200"></textarea>
         </div>
-      `;
+        <button onclick="MotoMap._submitDangerReport()" style="width:100%; padding:14px; background:linear-gradient(135deg, #ff3333, #ff6b35); border:none; border-radius:12px; color:#fff; font-weight:700; font-size:0.95rem; cursor:pointer;">
+          ⚠️ Təhlükəni Bildir
+        </button>
+      </div>
+    `;
 
-      MotoApp.openModal(html, '⚠️ Təhlükə Bildir');
+    MotoApp.openModal(html, '⚠️ Təhlükə Bildir');
+
+    /* Get GPS in background — update hidden fields when ready */
+    this.getCurrentLocation((pos) => {
+      const gLat = pos.coords.latitude;
+      const gLng = pos.coords.longitude;
+      const latEl = document.getElementById('danger-lat');
+      const lngEl = document.getElementById('danger-lng');
+      const locText = document.getElementById('danger-location-text');
+      if (latEl) latEl.value = gLat;
+      if (lngEl) lngEl.value = gLng;
+      if (locText) locText.textContent = `📍 Yer tapıldı: ${gLat.toFixed(4)}, ${gLng.toFixed(4)}`;
     });
   },
 

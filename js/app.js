@@ -474,12 +474,14 @@ const MotoApp = {
     if (modalTitle) modalTitle.textContent = title || '';
     modalBody.innerHTML = contentHtml;
     modal.classList.remove('hidden');
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
   },
 
   closeModal() {
     const modal = document.getElementById('modal-container');
     if (!modal) return;
+    modal.classList.remove('active');
     modal.classList.add('hidden');
     document.body.style.overflow = '';
   },
