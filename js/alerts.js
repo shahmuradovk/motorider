@@ -12,6 +12,7 @@ const MotoAlerts = {
     { id: 'pothole', icon: '🕳️', label: 'Çuxur', color: '#9966ff' },
   ],
 
+  currentFilter: 'all',
   expiryCheckInterval: null,
   ALERT_EXPIRY_MS: 2 * 60 * 60 * 1000, // 2 hours
 
@@ -21,7 +22,6 @@ const MotoAlerts = {
   init() {
     this.renderAlerts();
     this.checkExpiry();
-    /* Check expiry every 5 minutes */
     this.expiryCheckInterval = setInterval(
       () => this.checkExpiry(),
       5 * 60 * 1000
@@ -29,7 +29,7 @@ const MotoAlerts = {
   },
 
   /* ──────────────────────────────────────────────
-     RENDER ALERTS LIST
+     RENDER ALERTS LIST — uses alerts.css classes
   ────────────────────────────────────────────── */
   renderAlerts() {
     const container = document.getElementById('alerts-list');
@@ -40,61 +40,89 @@ const MotoAlerts = {
       alerts = MotoStorage.getAlerts() || [];
     }
 
+    /* Filter */
+    let filtered = alerts;
+    if (this.currentFilter !== 'all') {
+      filtered = alerts.filter(a => a.type === this.currentFilter);
+    }
+
     /* Sort newest first */
-    alerts.sort(
+    filtered.sort(
       (a, b) =>
         new Date(b.timestamp || b.createdAt) -
         new Date(a.timestamp || a.createdAt)
     );
 
-    let html = `
-      <div class="alerts-header">
-        <h2 class="page-title">⚠️ Xəbərdarlıqlar</h2>
-        <p class="page-subtitle">Yol vəziyyəti haqqında real-vaxt məlumatlar</p>
-      </div>
+    let html = '';
+
+    /* Header — alerts.css .alerts-header */
+    html += `
+      <div class="alerts-content">
+        <div class="alerts-header">
+          <h2 class="alerts-title">Xəbərdarlıqlar</h2>
+        </div>
+
+        <!-- Alert Type Selector — alerts.css .alert-type-selector -->
+        <div class="alert-type-selector">
+          <button class="alert-type-btn all ${this.currentFilter === 'all' ? 'active' : ''}"
+                  onclick="MotoAlerts.setFilter('all')">
+            <div class="alert-type-icon">📋</div>
+            <span class="alert-type-label">Hamısı</span>
+          </button>
     `;
 
-    if (alerts.length === 0) {
+    this.alertTypes.forEach(type => {
+      html += `
+          <button class="alert-type-btn ${type.id} ${this.currentFilter === type.id ? 'active' : ''}"
+                  onclick="MotoAlerts.setFilter('${type.id}')">
+            <div class="alert-type-icon">${type.icon}</div>
+            <span class="alert-type-label">${type.label}</span>
+          </button>
+      `;
+    });
+
+    html += '</div>';
+
+    /* Alert list */
+    if (filtered.length === 0) {
       html += `
         <div class="empty-state">
-          <div class="empty-icon">✅</div>
-          <p>Hazırda aktiv xəbərdarlıq yoxdur</p>
-          <p class="empty-sub">Yolda problem gördün? Xəbər ver!</p>
-          <button class="btn-primary" onclick="MotoAlerts.showCreateForm()">
-            + Xəbərdarlıq Yarat
-          </button>
+          <div class="empty-state-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <h3 class="empty-state-title">Aktiv xəbərdarlıq yoxdur</h3>
+          <p class="empty-state-text">Yolda problem gördün? Xəbər ver!</p>
         </div>
       `;
     } else {
-      html += '<div class="alerts-grid">';
-      alerts.forEach((alert) => {
-        html += this.renderAlertCard(alert);
+      html += '<div class="alerts-list">';
+      filtered.forEach((alert, i) => {
+        html += this.renderAlertCard(alert, i);
       });
       html += '</div>';
     }
 
-    /* FAB */
-    html += `
-      <button class="fab-btn fab-alert" id="fab-create-alert" onclick="MotoAlerts.showCreateForm()">
-        <span>+</span>
-      </button>
-    `;
+    html += '</div>'; // close alerts-content
 
     container.innerHTML = html;
   },
 
   /* ──────────────────────────────────────────────
-     ALERT CARD
+     ALERT CARD — uses alerts.css classes
   ────────────────────────────────────────────── */
-  renderAlertCard(alert) {
+  renderAlertCard(alert, index) {
     const typeInfo = this.alertTypes.find((t) => t.id === alert.type) || {
       icon: '⚠️',
       label: 'Naməlum',
       color: '#ffaa00',
+      id: 'danger',
     };
+    const typeClass = typeInfo.id || alert.type || 'danger';
     const timeAgo =
-      typeof MotoMap !== 'undefined'
-        ? MotoMap.formatTimeAgo(alert.timestamp || alert.createdAt)
+      typeof MotoStorage !== 'undefined'
+        ? MotoStorage.getTimeAgo(alert.timestamp || alert.createdAt)
         : '';
     const remaining = this.getTimeRemaining(alert);
 
@@ -103,53 +131,71 @@ const MotoAlerts = {
     if (typeof MotoStorage !== 'undefined' && MotoStorage.getUsers) {
       const users = MotoStorage.getUsers();
       const creator = users.find((u) => u.id === alert.creatorId);
-      if (creator) creatorName = creator.name;
+      if (creator) creatorName = `${creator.firstName || ''} ${creator.lastName || ''}`.trim() || creator.email;
     }
 
+    const delay = Math.min(index || 0, 7) * 50;
+
     return `
-      <div class="alert-card" style="--alert-border-color: ${typeInfo.color}">
-        <div class="alert-card-left" style="background: ${typeInfo.color}20">
-          <span class="alert-card-icon">${typeInfo.icon}</span>
-        </div>
+      <div class="alert-card ${typeClass}" style="animation-delay: ${delay}ms">
+        <div class="alert-card-icon">${typeInfo.icon}</div>
         <div class="alert-card-content">
           <div class="alert-card-header">
-            <span class="alert-type-label" style="color: ${typeInfo.color}">${typeInfo.label}</span>
-            <span class="alert-time">${timeAgo}</span>
+            <span class="alert-card-title">${this.escapeHtml(alert.description || typeInfo.label)}</span>
+            <span class="alert-card-type">${typeInfo.label}</span>
           </div>
-          <p class="alert-description">${this.escapeHtml(alert.description || '')}</p>
-          <div class="alert-card-footer">
-            <span class="alert-creator">👤 ${this.escapeHtml(creatorName)}</span>
-            <span class="alert-remaining">⏳ ${remaining}</span>
-            ${
-              alert.lat && alert.lng
-                ? `<button class="btn-ghost btn-xs" onclick="MotoAlerts.showOnMap('${alert.id}')">🗺️ Xəritədə gör</button>`
-                : ''
-            }
+          <div class="alert-card-meta">
+            <div class="alert-card-meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="alert-time-ago">${timeAgo}</span>
+            </div>
+            <div class="alert-card-meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              ${this.escapeHtml(creatorName)}
+            </div>
+            <div class="alert-expiry ${remaining === 'Vaxtı bitib' ? 'expired' : ''}">
+              <svg class="alert-expiry-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              ${remaining}
+            </div>
           </div>
+          ${alert.lat && alert.lng ? `
+            <div style="margin-top: 8px;">
+              <button class="alert-card-vote-btn" onclick="event.stopPropagation(); MotoAlerts.showOnMap('${alert.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Xəritədə gör
+              </button>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
   },
 
   /* ──────────────────────────────────────────────
+     FILTER
+  ────────────────────────────────────────────── */
+  setFilter(filter) {
+    this.currentFilter = filter;
+    this.renderAlerts();
+  },
+
+  /* ──────────────────────────────────────────────
      CREATE ALERT
   ────────────────────────────────────────────── */
   showCreateForm() {
-    /* Step 1: Type selection */
     let html = `
       <div class="alert-create-flow" id="alert-create-flow">
         <div class="alert-step" id="alert-step-type">
-          <h4 class="step-label">Xəbərdarlıq növünü seçin</h4>
-          <div class="alert-type-grid">
+          <h4 style="font-family: var(--font-heading); font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 14px;">Xəbərdarlıq növünü seçin</h4>
+          <div class="alert-type-selector" style="margin-bottom: 0;">
     `;
 
     this.alertTypes.forEach((type) => {
       html += `
-        <button class="alert-type-btn" data-type-id="${type.id}"
-                style="--type-color: ${type.color}"
+        <button class="alert-type-btn ${type.id}" data-type-id="${type.id}"
                 onclick="MotoAlerts.selectAlertType('${type.id}')">
-          <span class="alert-type-btn-icon">${type.icon}</span>
-          <span class="alert-type-btn-label">${type.label}</span>
+          <div class="alert-type-icon">${type.icon}</div>
+          <span class="alert-type-label">${type.label}</span>
         </button>
       `;
     });
@@ -159,30 +205,29 @@ const MotoAlerts = {
         </div>
 
         <div class="alert-step hidden" id="alert-step-details">
-          <h4 class="step-label">Ətraflı məlumat</h4>
           <input type="hidden" id="alert-selected-type" value="" />
-          <div class="form-group">
-            <label class="form-label">Təsvir *</label>
-            <textarea id="alert-description" class="input-field textarea" rows="3"
-                      placeholder="Yol vəziyyətini təsvir edin..." maxlength="200"></textarea>
+          <div class="p-edit-group" style="margin-top: 14px;">
+            <label class="p-edit-label">Təsvir *</label>
+            <textarea id="alert-description" class="p-edit-input" rows="3"
+                      placeholder="Yol vəziyyətini təsvir edin..." maxlength="200" style="resize:vertical;"></textarea>
           </div>
-          <div class="form-group">
-            <label class="form-label">Yer</label>
-            <div class="location-options">
-              <button class="btn-secondary btn-sm active" id="btn-use-current-loc"
+          <div class="p-edit-group">
+            <label class="p-edit-label">Yer</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <button class="alert-card-vote-btn" style="flex:1;" id="btn-use-current-loc"
                       onclick="MotoAlerts.useCurrentLocation()">
                 📍 Hazırkı yerim
               </button>
-              <button class="btn-secondary btn-sm" id="btn-pick-on-map"
+              <button class="alert-card-vote-btn" style="flex:1;" id="btn-pick-on-map"
                       onclick="MotoAlerts.pickOnMap()">
                 🗺️ Xəritədən seç
               </button>
             </div>
             <input type="hidden" id="alert-lat" value="" />
             <input type="hidden" id="alert-lng" value="" />
-            <div id="alert-location-status" class="location-status"></div>
+            <div id="alert-location-status" style="font-size: 0.75rem; color: var(--text-muted);"></div>
           </div>
-          <button class="btn-primary btn-lg full-width" onclick="MotoAlerts.handleCreateSubmit()">
+          <button class="p-edit-save" onclick="MotoAlerts.handleCreateSubmit()">
             ⚠️ Xəbərdarlıq Göndər
           </button>
         </div>
@@ -195,16 +240,13 @@ const MotoAlerts = {
   selectAlertType(typeId) {
     document.getElementById('alert-selected-type').value = typeId;
 
-    /* Highlight selected button */
     document.querySelectorAll('.alert-type-btn').forEach((btn) => {
-      btn.classList.toggle('selected', btn.dataset.typeId === typeId);
+      btn.classList.toggle('active', btn.dataset.typeId === typeId);
     });
 
-    /* Show step 2 */
     const step2 = document.getElementById('alert-step-details');
     if (step2) step2.classList.remove('hidden');
 
-    /* Auto-get current location */
     this.useCurrentLocation();
   },
 
@@ -226,7 +268,6 @@ const MotoAlerts = {
           if (statusEl) statusEl.textContent = '✅ Yer təyin olundu';
         },
         () => {
-          /* Fallback to Baku center */
           document.getElementById('alert-lat').value = 40.4093;
           document.getElementById('alert-lng').value = 49.8671;
           if (statusEl)
@@ -234,12 +275,6 @@ const MotoAlerts = {
         }
       );
     }
-
-    /* Toggle button styles */
-    const btnCurrent = document.getElementById('btn-use-current-loc');
-    const btnMap = document.getElementById('btn-pick-on-map');
-    if (btnCurrent) btnCurrent.classList.add('active');
-    if (btnMap) btnMap.classList.remove('active');
   },
 
   pickOnMap() {
@@ -248,15 +283,12 @@ const MotoAlerts = {
 
     MotoApp.showToast('Xəritədə yerə toxunun', 'info');
 
-    /* Set up a one-time click listener on the map */
     if (typeof MotoMap !== 'undefined' && MotoMap.map) {
       const onMapClick = (e) => {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
 
         MotoMap.map.off('click', onMapClick);
-
-        /* Re-open the create form with location filled in */
         this.showCreateForm();
 
         setTimeout(() => {
@@ -265,11 +297,6 @@ const MotoAlerts = {
           const statusEl = document.getElementById('alert-location-status');
           if (statusEl)
             statusEl.textContent = `✅ Yer seçildi: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
-          const btnCurrent = document.getElementById('btn-use-current-loc');
-          const btnMap = document.getElementById('btn-pick-on-map');
-          if (btnCurrent) btnCurrent.classList.remove('active');
-          if (btnMap) btnMap.classList.add('active');
         }, 300);
       };
 
@@ -325,7 +352,6 @@ const MotoAlerts = {
     this.renderAlerts();
     this.notifyAllUsers(alert);
 
-    /* Add to map */
     if (typeof MotoMap !== 'undefined') {
       MotoMap.addAlertMarker(alert);
     }
@@ -345,7 +371,6 @@ const MotoAlerts = {
       'warning'
     );
 
-    /* Save to notification storage */
     if (
       typeof MotoStorage !== 'undefined' &&
       MotoStorage.addNotification
@@ -375,8 +400,7 @@ const MotoAlerts = {
       const age = now - new Date(a.timestamp || a.createdAt).getTime();
       if (age > this.ALERT_EXPIRY_MS) {
         changed = true;
-        /* Remove from map */
-        if (typeof MotoMap !== 'undefined' && MotoMap.alertMarkers[a.id]) {
+        if (typeof MotoMap !== 'undefined' && MotoMap.alertMarkers && MotoMap.alertMarkers[a.id]) {
           MotoMap.map.removeLayer(MotoMap.alertMarkers[a.id]);
           delete MotoMap.alertMarkers[a.id];
         }
@@ -402,8 +426,8 @@ const MotoAlerts = {
     const hrs = Math.floor(mins / 60);
     const rMins = mins % 60;
 
-    if (hrs > 0) return `${hrs} saat ${rMins} dəq qalıb`;
-    return `${rMins} dəq qalıb`;
+    if (hrs > 0) return `${hrs}s ${rMins}d qalıb`;
+    return `${rMins}d qalıb`;
   },
 
   /* ──────────────────────────────────────────────
@@ -421,8 +445,7 @@ const MotoAlerts = {
       if (typeof MotoMap !== 'undefined' && MotoMap.map) {
         MotoMap.map.setView([alert.lat, alert.lng], 16, { animate: true });
 
-        /* Open popup if marker exists */
-        if (MotoMap.alertMarkers[alert.id]) {
+        if (MotoMap.alertMarkers && MotoMap.alertMarkers[alert.id]) {
           MotoMap.alertMarkers[alert.id].openPopup();
         }
       }
