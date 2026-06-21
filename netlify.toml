@@ -1,16 +1,14 @@
-[build]
-  functions = "netlify/functions"
-  publish = "."
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
 
-[functions]
-  node_bundler = "esbuild"
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-[dev]
-  port = 8888
-  targetPort = 3000
-  autoLaunch = false
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
