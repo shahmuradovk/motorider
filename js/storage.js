@@ -23,8 +23,21 @@ const MotoStorage = {
     // ── Auto-migration: clean up old flags ──
     localStorage.removeItem('moto_initialized');
 
-    // Seed only if USERS key has never been created
-    if (localStorage.getItem(this.KEYS.USERS) === null) {
+    // Detect corrupted state: users key exists but is empty + no session
+    const rawUsers = localStorage.getItem(this.KEYS.USERS);
+    if (rawUsers !== null) {
+      try {
+        const parsed = JSON.parse(rawUsers);
+        if (Array.isArray(parsed) && parsed.length === 0 && !localStorage.getItem(this.KEYS.CURRENT_USER)) {
+          // Empty users with no session = fresh state, ensure other keys exist
+          this._seedDemoData();
+        }
+      } catch (e) {
+        // Corrupted JSON — reset everything
+        this._seedDemoData();
+      }
+    } else {
+      // First ever visit
       this._seedDemoData();
     }
 
