@@ -311,25 +311,27 @@ const MotoMap = {
      RIDERS ONLINE — real count only
   ────────────────────────────────────────────── */
   updateRidersOnline() {
-    let count = 0;
+    let count = Object.keys(this.markers).length;
 
-    /* Count real shared locations only */
+    /* Also count shared locations */
     if (typeof MotoStorage !== 'undefined' && MotoStorage.getSharedLocations) {
       const shared = MotoStorage.getSharedLocations() || [];
-      count = shared.length;
+      count = Math.max(count, shared.length);
     }
 
-    /* Count other user markers (not demo) */
-    count = Math.max(count, Object.keys(this.markers).length);
-
-    const el = document.getElementById('riders-online-count');
-    const overlay = document.getElementById('riders-online-overlay');
-
-    if (el) el.textContent = count;
-
-    /* Hide overlay if 0 */
-    if (overlay) {
-      overlay.style.display = count > 0 ? '' : 'none';
+    /* Show/hide green badge on FAB button */
+    const fab = document.getElementById('map-fab-main');
+    if (!fab) return;
+    let badge = fab.querySelector('.fab-rider-badge');
+    if (count > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'fab-rider-badge';
+        fab.appendChild(badge);
+      }
+      badge.textContent = count;
+    } else if (badge) {
+      badge.remove();
     }
   },
 
@@ -406,28 +408,40 @@ const MotoMap = {
   updateUserMarker(lat, lng) {
     if (!this.map) return;
 
-    /* Get safe name for popup */
     let userName = 'Siz';
+    let initials = 'S';
     if (typeof MotoStorage !== 'undefined') {
       const user = MotoStorage.getCurrentUser();
-      if (user) userName = this.safeDisplayName(user);
+      if (user) {
+        userName = this.safeDisplayName(user);
+        initials = MotoStorage.getInitials ? MotoStorage.getInitials(user.firstName, user.lastName) : userName.charAt(0);
+      }
     }
 
     const icon = L.divIcon({
-      className: 'user-marker-icon',
-      html: `<div class="user-marker-pulse"></div><div class="user-marker-dot"></div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      className: 'moto-rider-marker',
+      html: `
+        <div class="rider-marker-self">
+          <div class="rider-pulse-ring" style="border-color: #ff6b35;"></div>
+          <div class="rider-avatar" style="background: linear-gradient(135deg, #ff6b35, #ff8c42); border-color: #ff6b35;">
+            <span>${initials}</span>
+          </div>
+          <div class="rider-name-tag">${userName}</div>
+        </div>
+      `,
+      iconSize: [48, 64],
+      iconAnchor: [24, 32],
+      popupAnchor: [0, -36],
     });
 
     if (this.userMarker) {
       this.userMarker.setLatLng([lat, lng]);
+      this.userMarker.setIcon(icon);
     } else {
-      this.userMarker = L.marker([lat, lng], { icon: icon }).addTo(this.map);
-      this.userMarker.bindPopup(
-        `<div class="moto-popup"><strong>${userName}</strong></div>`
-      );
+      this.userMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(this.map);
     }
+    this.userMarker.unbindPopup();
+    this.userMarker.bindPopup(`<div class="moto-popup"><strong>📍 ${userName}</strong><p style="font-size:0.75rem;color:#999;margin:2px 0 0;">Siz buradasınız</p></div>`);
   },
 
   centerOnUser() {
@@ -864,23 +878,29 @@ const MotoMap = {
   addUserMarker(userData) {
     if (!this.map || !userData.coords) return;
     const safeName = userData.name || 'Sürücü';
+    const initial = safeName.charAt(0).toUpperCase();
+    const isRiding = userData.status === 'riding';
+    const isOnline = userData.status === 'online' || isRiding;
+    const color = isRiding ? '#ff6b35' : '#22c55e';
+
     const icon = L.divIcon({
-      className: 'custom-user-marker',
+      className: 'moto-rider-marker',
       html: `
-        <div class="marker-wrapper ${userData.status === 'riding' ? 'marker-riding' : userData.status === 'online' ? 'marker-online' : 'marker-offline'}">
-          ${userData.status === 'riding' ? '<div class="marker-pulse-ring"></div>' : ''}
-          <div class="marker-avatar" style="border-color: ${userData.color || '#ff6b35'}">
-            <span>${userData.avatar || '🏍️'}</span>
+        <div class="rider-marker-other">
+          ${isOnline ? `<div class="rider-pulse-ring" style="border-color: ${color};"></div>` : ''}
+          <div class="rider-avatar" style="background: ${isRiding ? 'linear-gradient(135deg, #ff6b35, #ff8c42)' : 'linear-gradient(135deg, #22c55e, #4ade80)'}; border-color: ${color};">
+            <span>${initial}</span>
           </div>
-          <div class="marker-name-tag">${safeName}</div>
+          ${isOnline ? `<div class="rider-status-dot" style="background: ${color};"></div>` : ''}
+          <div class="rider-name-tag">${safeName}</div>
         </div>
       `,
-      iconSize: [48, 60],
-      iconAnchor: [24, 60],
-      popupAnchor: [0, -60],
+      iconSize: [48, 64],
+      iconAnchor: [24, 32],
+      popupAnchor: [0, -36],
     });
 
-    const marker = L.marker(userData.coords, { icon: icon }).addTo(this.map);
+    const marker = L.marker(userData.coords, { icon }).addTo(this.map);
     marker.bindPopup(this.createUserPopup(userData));
     this.markers[userData.id] = marker;
   },
