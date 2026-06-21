@@ -1747,3 +1747,31 @@
   color: var(--text-muted);
   margin-top: 4px;
 }
+
+/* Date Input Fix */
+.input-wrapper input[type="date"] {
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+  padding: 4px;
+  margin-right: -4px;
+}
+
+.input-wrapper input[type="date"]::-webkit-datetime-edit {
+  color: var(--text-primary);
+}
+
+.input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+.input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+.input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+.input-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+  color: var(--text-primary);
+}
+
+.input-wrapper input[type="date"]:invalid::-webkit-datetime-edit {
+  color: var(--text-muted);
+}
