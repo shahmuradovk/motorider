@@ -19,11 +19,23 @@ const MotoStorage = {
     INITIALIZED: 'moto_initialized'
   },
 
-  // ─── Initialize ────────────────────────────────────────────
   init() {
-    // Only seed if storage has never been set up (USERS key doesn't exist)
+    // ── Auto-migration: clean up old flags ──
+    localStorage.removeItem('moto_initialized');
+
+    // Seed only if USERS key has never been created
     if (localStorage.getItem(this.KEYS.USERS) === null) {
       this._seedDemoData();
+    }
+
+    // Fix corrupted state: if current_user points to deleted user, clear session
+    const current = this.getCurrentUser();
+    if (current) {
+      const users = this.getUsers();
+      const exists = users.find(u => u.id === current.id);
+      if (!exists) {
+        localStorage.removeItem(this.KEYS.CURRENT_USER);
+      }
     }
   },
 
