@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="css/events.css">
   <link rel="stylesheet" href="css/alerts.css">
   <link rel="stylesheet" href="css/profile.css">
-
+  <link rel="stylesheet" href="css/admin.css">
   <style>
     /* Splash Screen */
     #splash-screen {
@@ -624,6 +624,11 @@
                 <span id="profile-bike-text">—</span>
               </p>
               <p class="p-email" id="profile-email"></p>
+              <p class="p-bio" id="profile-bio"></p>
+              <button class="p-edit-btn" id="profile-edit-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Profili Redaktə et
+              </button>
             </div>
           </div>
 
@@ -648,6 +653,31 @@
               <div class="p-stat-icon" style="background: linear-gradient(135deg, #22c55e, #4ade80);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
               <span class="p-stat-value" id="stat-friends">0</span>
               <span class="p-stat-label">Dost</span>
+            </div>
+          </div>
+
+          <!-- Motorcycle Card -->
+          <div class="p-section">
+            <div class="p-section-header"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><h3>Motosiklet</h3></div>
+            <div class="p-card">
+              <div class="p-moto-card">
+                <div class="p-moto-icon">🏍️</div>
+                <div class="p-moto-info">
+                  <div class="p-moto-name" id="profile-moto-name">—</div>
+                  <div class="p-moto-detail" id="profile-moto-detail">—</div>
+                </div>
+                <div class="p-moto-cc" id="profile-moto-cc">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Achievements -->
+          <div class="p-section">
+            <div class="p-section-header"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg><h3>Nailiyyətlər</h3></div>
+            <div class="p-card">
+              <div class="p-badges" id="profile-badges">
+                <!-- Dynamically populated -->
+              </div>
             </div>
           </div>
 
@@ -686,7 +716,7 @@
                 </div>
                 <label class="p-toggle"><input type="checkbox" id="setting-darkmode" checked><span class="p-toggle-track"><span class="p-toggle-thumb"></span></span></label>
               </div>
-              <div class="p-setting" style="border: none;">
+              <div class="p-setting">
                 <div class="p-setting-left">
                   <div class="p-setting-icon" style="background: rgba(255,170,0,0.15); color: #ffaa00;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div>
                   <div><span class="p-setting-name">Səs effektləri</span><span class="p-setting-desc">Bildiriş səsləri</span></div>
@@ -694,6 +724,15 @@
                 <label class="p-toggle"><input type="checkbox" id="setting-sounds" checked><span class="p-toggle-track"><span class="p-toggle-thumb"></span></span></label>
               </div>
             </div>
+          </div>
+
+          <!-- Admin Entry (admin only) -->
+          <div class="p-section hidden" id="admin-entry-section">
+            <button class="p-admin-entry" id="admin-entry-btn">
+              <div class="p-setting-icon" style="background: rgba(255,107,53,0.12); color: #ff6b35;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div><span class="p-setting-name">Admin Panel</span><span class="p-setting-desc">İdarəetmə paneli</span></div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-left: auto;"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
 
           <!-- Logout -->
@@ -706,6 +745,53 @@
           </div>
 
         </section>
+
+        <!-- PAGE: Admin (hidden, no bottom nav) -->
+        <section id="page-admin" class="page" data-page="admin" aria-label="Admin Panel" style="padding: 16px; padding-bottom: 100px;">
+          <!-- Admin Header -->
+          <div class="admin-header">
+            <button class="admin-back" id="admin-back-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              Geri
+            </button>
+            <h2 class="admin-title">Admin Panel</h2>
+            <span class="admin-badge">Admin</span>
+          </div>
+
+          <!-- Dashboard Stats -->
+          <div class="admin-stats">
+            <div class="admin-stat">
+              <div class="admin-stat-icon" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+              <div class="admin-stat-info"><span class="admin-stat-value" id="admin-stat-users">0</span><span class="admin-stat-label">İstifadəçi</span></div>
+            </div>
+            <div class="admin-stat">
+              <div class="admin-stat-icon" style="background: linear-gradient(135deg, #ff6b35, #ff9a56);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div class="admin-stat-info"><span class="admin-stat-value" id="admin-stat-rides">0</span><span class="admin-stat-label">Sürüş</span></div>
+            </div>
+            <div class="admin-stat">
+              <div class="admin-stat-icon" style="background: linear-gradient(135deg, #a855f7, #c084fc);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div>
+              <div class="admin-stat-info"><span class="admin-stat-value" id="admin-stat-events">0</span><span class="admin-stat-label">Tədbir</span></div>
+            </div>
+            <div class="admin-stat">
+              <div class="admin-stat-icon" style="background: linear-gradient(135deg, #ff3333, #ff6b6b);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+              <div class="admin-stat-info"><span class="admin-stat-value" id="admin-stat-alerts">0</span><span class="admin-stat-label">Xəbərdarlıq</span></div>
+            </div>
+          </div>
+
+          <!-- Admin Tabs -->
+          <div class="admin-tabs">
+            <button class="admin-tab active" data-tab="users">İstifadəçilər</button>
+            <button class="admin-tab" data-tab="events">Tədbirlər</button>
+            <button class="admin-tab" data-tab="alerts">Xəbərdarlıqlar</button>
+            <button class="admin-tab" data-tab="system">Sistem</button>
+          </div>
+
+          <!-- Admin Content -->
+          <div class="admin-content" id="admin-tab-content">
+            <!-- Dynamically populated by admin.js -->
+          </div>
+        </section>
+
 
       </div>
 
@@ -1024,6 +1110,7 @@
   <script src="js/events.js"></script>
   <script src="js/alerts.js"></script>
   <script src="js/friends.js"></script>
+  <script src="js/admin.js"></script>
   <script src="js/app.js"></script>
 
 </body>

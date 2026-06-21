@@ -1,44 +1,34 @@
 /* ═══════════════════════════════════════════════════════
-   PREMIUM PROFILE PAGE — MotoRiders
-   Discord + Strava + Tesla inspired dark theme
+   PROFILE PAGE — Premium MotoRiders
+   Hero, Stats, Achievements, Ride History,
+   Motorcycle Card, Profile Edit, Settings
    ═══════════════════════════════════════════════════════ */
 
-/* ── Hero Card ── */
+/* ── Hero Section ── */
 .p-hero {
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255,255,255,0.06);
+  margin: 16px;
+  min-height: 200px;
 }
 
 .p-hero-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #1a1020 0%, #0f0a1a 40%, #0a0f1a 100%);
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255,107,53,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(255,51,51,0.15) 0%, transparent 50%),
+    linear-gradient(160deg, #1a1a2e 0%, #0f0f1a 100%);
   z-index: 0;
-}
-
-.p-hero-bg::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -30%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(255,107,53,0.12) 0%, transparent 70%);
-  border-radius: 50%;
 }
 
 .p-hero-bg::after {
   content: '';
   position: absolute;
-  bottom: -40%;
-  left: -20%;
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%);
-  border-radius: 50%;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
 }
 
 .p-hero-content {
@@ -54,57 +44,106 @@
 /* ── Avatar Ring ── */
 .p-avatar-ring {
   position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, #ff6b35, #ff3333, #ff6b35);
   margin-bottom: 16px;
+  animation: ringPulse 3s ease-in-out infinite;
 }
 
-.p-avatar-ring .avatar-xl {
-  width: 80px;
-  height: 80px;
-  font-size: 28px;
-  border: 3px solid transparent;
-  background-image: linear-gradient(#13131a, #13131a), linear-gradient(135deg, #ff6b35, #a855f7);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+@keyframes ringPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.3); }
+  50% { box-shadow: 0 0 20px 4px rgba(255,107,53,0.15); }
+}
+
+.p-avatar-ring .avatar {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(255,107,53,0.1), 0 8px 32px rgba(0,0,0,0.4);
+  border: 3px solid #0a0a0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.p-avatar-ring .avatar-initials {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
 }
 
 .p-online-dot {
   position: absolute;
   bottom: 4px;
   right: 4px;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: #22c55e;
-  border: 3px solid #13131a;
+  border: 3px solid #0a0a0f;
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(34,197,94,0.5);
 }
 
 /* ── Name & Info ── */
 .p-name {
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 800;
   color: #fff;
-  margin: 0 0 6px;
-  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 
 .p-bike {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: #ff6b35;
-  font-weight: 600;
-  margin: 0 0 4px;
+  justify-content: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.p-bike svg {
+  color: var(--accent-primary);
+  flex-shrink: 0;
 }
 
 .p-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.p-bio {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  max-width: 280px;
+  line-height: 1.4;
+}
+
+.p-edit-btn {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
   font-size: 0.78rem;
-  color: #666;
-  margin: 0;
+  font-weight: 600;
+  color: #ff6b35;
+  background: rgba(255,107,53,0.1);
+  border: 1px solid rgba(255,107,53,0.2);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.p-edit-btn:hover {
+  background: rgba(255,107,53,0.18);
+  border-color: rgba(255,107,53,0.35);
+  transform: translateY(-1px);
 }
 
 
@@ -113,56 +152,57 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin-bottom: 24px;
+  padding: 0 16px;
+  margin: 20px 0;
 }
 
 .p-stat-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 8px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 16px;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  transition: border-color 0.3s, transform 0.2s;
 }
 
 .p-stat-card:hover {
-  transform: translateY(-2px);
   border-color: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
 }
 
 .p-stat-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border-radius: 10px;
 }
 
 .p-stat-value {
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 1.35rem;
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
   font-weight: 800;
   color: #fff;
   line-height: 1;
 }
 
 .p-stat-label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #666;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 500;
+  letter-spacing: 0.04em;
 }
 
 
-/* ── Sections ── */
+/* ── Section & Card ── */
 .p-section {
-  margin-bottom: 20px;
+  padding: 0 16px;
+  margin-bottom: 16px;
 }
 
 .p-section-header {
@@ -170,51 +210,169 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  padding: 0 4px;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .p-section-header h3 {
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #888;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
-.p-section-header svg {
-  width: 16px;
-  height: 16px;
-  opacity: 0.6;
-}
-
-
-/* ── Cards ── */
 .p-card {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 16px;
   padding: 16px;
-  backdrop-filter: blur(8px);
+  transition: border-color 0.2s;
+}
+
+.p-card:hover {
+  border-color: rgba(255,255,255,0.1);
 }
 
 
-/* ── Empty State ── */
+/* ── Motorcycle Card ── */
+.p-moto-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.p-moto-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff6b35, #ff3333);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.3rem;
+}
+
+.p-moto-info {
+  flex: 1;
+}
+
+.p-moto-name {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.p-moto-detail {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.p-moto-cc {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #ff6b35;
+  white-space: nowrap;
+}
+
+
+/* ── Achievement Badges ── */
+.p-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.p-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #bbb;
+  transition: all 0.2s;
+}
+
+.p-badge.earned {
+  border-color: rgba(255,170,0,0.3);
+  color: #ffaa00;
+  background: rgba(255,170,0,0.06);
+}
+
+.p-badge-emoji {
+  font-size: 1rem;
+}
+
+.p-badge.locked {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+
+/* ── Ride History ── */
+.p-ride-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.p-ride-item:last-child {
+  border-bottom: none;
+}
+
+.p-ride-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--gradient-primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.p-ride-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.p-ride-route {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ddd;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.p-ride-meta {
+  font-size: 0.72rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.p-ride-km {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #ff6b35;
+  white-space: nowrap;
+}
+
 .p-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 24px;
-  text-align: center;
-}
-
-.p-empty p {
-  font-size: 0.85rem;
+  padding: 24px 16px;
   color: #555;
-  margin: 0;
+  font-size: 0.82rem;
+  text-align: center;
 }
 
 
@@ -228,12 +386,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  transition: background 0.15s ease;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
-.p-setting:hover {
-  background: rgba(255,255,255,0.02);
+.p-setting:last-child {
+  border-bottom: none;
 }
 
 .p-setting-left {
@@ -243,8 +400,8 @@
 }
 
 .p-setting-icon {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,18 +410,17 @@
 }
 
 .p-setting-name {
-  display: block;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #e0e0e0;
-  line-height: 1.2;
+  color: #ddd;
+  display: block;
 }
 
 .p-setting-desc {
-  display: block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #666;
-  margin-top: 2px;
+  display: block;
+  margin-top: 1px;
 }
 
 
@@ -272,49 +428,67 @@
 .p-toggle {
   position: relative;
   cursor: pointer;
-  display: inline-block;
+  flex-shrink: 0;
 }
 
-.p-toggle input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
+.p-toggle input { display: none; }
 
 .p-toggle-track {
   display: block;
   width: 44px;
   height: 24px;
-  background: #2a2a3a;
+  background: rgba(255,255,255,0.08);
   border-radius: 12px;
   position: relative;
-  transition: background 0.3s ease;
+  transition: background 0.3s;
+}
+
+.p-toggle input:checked + .p-toggle-track {
+  background: linear-gradient(135deg, #ff6b35, #ff3333);
 }
 
 .p-toggle-thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  background: #666;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
   border-radius: 50%;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, box-shadow 0.3s ease;
-}
-
-.p-toggle input:checked + .p-toggle-track {
-  background: #ff6b35;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .p-toggle input:checked + .p-toggle-track .p-toggle-thumb {
   transform: translateX(20px);
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(255,107,53,0.4);
 }
 
 
-/* ── Logout Button ── */
+/* ── Admin Button ── */
+.p-admin-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 16px;
+}
+
+.p-admin-entry:hover {
+  background: rgba(255,107,53,0.06);
+}
+
+.p-admin-entry .p-setting-icon {
+  background: rgba(255,107,53,0.12);
+  color: #ff6b35;
+}
+
+
+/* ── Logout ── */
 .p-logout-btn {
   display: flex;
   align-items: center;
@@ -322,73 +496,136 @@
   gap: 8px;
   width: 100%;
   padding: 14px;
-  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-family: var(--font-heading);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #ff4444;
-  background: rgba(255,68,68,0.08);
-  border: 1px solid rgba(255,68,68,0.15);
+  background: rgba(255,68,68,0.06);
+  border: 1px solid rgba(255,68,68,0.12);
   border-radius: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .p-logout-btn:hover {
-  background: rgba(255,68,68,0.15);
-  border-color: rgba(255,68,68,0.3);
+  background: rgba(255,68,68,0.12);
+  border-color: rgba(255,68,68,0.25);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(255,68,68,0.15);
 }
 
 .p-version {
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #444;
-  margin: 14px 0 0;
+  margin-top: 12px;
+}
+
+.p-joined {
+  font-size: 0.72rem;
+  color: #555;
+}
+
+
+/* ── Profile Edit Modal ── */
+.p-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.p-edit-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.p-edit-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.p-edit-input {
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: #eee;
+  font-size: 0.88rem;
+  transition: border-color 0.2s;
+}
+
+.p-edit-input:focus {
+  border-color: rgba(255,107,53,0.5);
+  outline: none;
+}
+
+.p-edit-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.p-edit-save {
+  padding: 13px;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6b35, #ff3333);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.p-edit-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(255,107,53,0.3);
 }
 
 
 /* ── Responsive ── */
-@media (max-width: 380px) {
+@media (max-width: 400px) {
   .p-stats {
     grid-template-columns: repeat(2, 1fr);
   }
-  
-  .p-stat-icon {
-    width: 36px;
-    height: 36px;
+
+  .p-hero-content {
+    padding: 24px 16px 20px;
   }
-  
-  .p-stat-value {
+
+  .p-name {
     font-size: 1.15rem;
+  }
+
+  .p-edit-row {
+    grid-template-columns: 1fr;
+  }
+
+  .p-badges {
+    justify-content: center;
   }
 }
 
 @media (min-width: 600px) {
-  .p-hero-content {
-    padding: 40px 32px 36px;
+  .p-hero {
+    margin: 16px 24px;
   }
-  
-  .p-avatar-ring .avatar-xl {
-    width: 96px;
-    height: 96px;
-    font-size: 32px;
+
+  .p-section {
+    padding: 0 24px;
   }
-  
-  .p-name {
-    font-size: 1.75rem;
+
+  .p-stats {
+    padding: 0 24px;
+    gap: 14px;
   }
-  
+
   .p-stat-card {
     padding: 20px 12px;
-  }
-  
-  .p-stat-icon {
-    width: 48px;
-    height: 48px;
-  }
-  
-  .p-stat-value {
-    font-size: 1.5rem;
   }
 }

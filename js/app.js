@@ -138,35 +138,38 @@ const MotoApp = {
     const headerInitials = document.getElementById('header-avatar-initials');
     const headerAvatar = document.getElementById('header-avatar');
     if (headerInitials) {
-      const initials = (user.firstName || user.first_name || '').charAt(0) + (user.lastName || user.last_name || '').charAt(0);
+      const initials = (user.firstName || '').charAt(0) + (user.lastName || '').charAt(0);
       headerInitials.textContent = initials.toUpperCase();
     }
     if (headerAvatar) {
-      headerAvatar.style.background = user.avatarColor || user.avatar_color || 'var(--gradient-primary)';
+      headerAvatar.style.background = user.avatarColor || 'var(--gradient-primary)';
     }
 
-    // Profile page
-    const profileName = document.getElementById('profile-name');
-    const profileBikeText = document.getElementById('profile-bike-text');
-    const profileEmail = document.getElementById('profile-email');
+    // Profile hero
+    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+
+    el('profile-name', `${user.firstName || ''} ${user.lastName || ''}`);
+    el('profile-bike-text', `${user.motoBrand || ''} ${user.motoModel || ''} ${user.motoCC || user.motoCc || ''}cc`);
+    el('profile-email', user.email || '');
+    el('profile-bio', user.bio || '');
+
     const profileInitials = document.getElementById('profile-avatar-initials');
     const profileAvatar = document.getElementById('profile-avatar');
-
-    if (profileName) {
-      profileName.textContent = `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`;
-    }
-    if (profileBikeText) {
-      profileBikeText.textContent = `${user.motoBrand || user.moto_brand || ''} ${user.motoModel || user.moto_model || ''} ${user.motoCc || user.moto_cc || ''}cc`;
-    }
-    if (profileEmail) {
-      profileEmail.textContent = user.email || '';
-    }
     if (profileInitials) {
-      const initials = (user.firstName || user.first_name || '').charAt(0) + (user.lastName || user.last_name || '').charAt(0);
-      profileInitials.textContent = initials.toUpperCase();
+      profileInitials.textContent = ((user.firstName || '').charAt(0) + (user.lastName || '').charAt(0)).toUpperCase();
     }
     if (profileAvatar) {
-      profileAvatar.style.background = user.avatarColor || user.avatar_color || 'var(--gradient-primary)';
+      profileAvatar.style.background = user.avatarColor || 'var(--gradient-primary)';
+    }
+
+    // Motorcycle card
+    el('profile-moto-name', `${user.motoBrand || '—'} ${user.motoModel || ''}`);
+    el('profile-moto-cc', user.motoCC || user.motoCc ? `${user.motoCC || user.motoCc}cc` : '—');
+
+    const motoDetail = document.getElementById('profile-moto-detail');
+    if (motoDetail) {
+      const joined = user.joinedAt ? new Date(user.joinedAt).toLocaleDateString('az-AZ', { year: 'numeric', month: 'long' }) : '—';
+      motoDetail.textContent = `Üzv: ${joined}`;
     }
 
     // Stats
@@ -175,8 +178,8 @@ const MotoApp = {
     const statEvents = document.getElementById('stat-events');
     const statFriends = document.getElementById('stat-friends');
 
-    if (statRides) statRides.textContent = user.totalRides || user.total_rides || 0;
-    if (statKm) statKm.textContent = Math.round(user.totalKm || user.total_km || 0);
+    if (statRides) statRides.textContent = user.totalRides || 0;
+    if (statKm) statKm.textContent = Math.round(user.totalKm || 0);
     if (statEvents) {
       const events = typeof MotoStorage !== 'undefined' ? MotoStorage.getEvents() : [];
       const myEvents = events.filter(e => e.creatorId === user.id || (e.participants && e.participants.includes(user.id)));
@@ -186,6 +189,123 @@ const MotoApp = {
       const friends = typeof MotoStorage !== 'undefined' ? MotoStorage.getFriends(user.id) : [];
       statFriends.textContent = friends.length;
     }
+
+    // Achievements
+    this.renderAchievements(user);
+
+    // Ride History
+    this.renderRideHistory(user);
+
+    // Admin entry
+    const adminSection = document.getElementById('admin-entry-section');
+    if (adminSection) {
+      const isAdmin = user.role === 'admin' || (user.email && user.email.toLowerCase() === 'shahmuradovk@gmail.com');
+      adminSection.classList.toggle('hidden', !isAdmin);
+    }
+
+    // Profile edit button
+    this.setupProfileEdit(user);
+
+    // Admin entry button
+    const adminBtn = document.getElementById('admin-entry-btn');
+    if (adminBtn && !adminBtn._bound) {
+      adminBtn.addEventListener('click', () => this.navigateTo('admin'));
+      adminBtn._bound = true;
+    }
+  },
+
+  renderAchievements(user) {
+    const container = document.getElementById('profile-badges');
+    if (!container) return;
+
+    const friends = typeof MotoStorage !== 'undefined' ? MotoStorage.getFriends(user.id) : [];
+    const events = typeof MotoStorage !== 'undefined' ? MotoStorage.getEvents() : [];
+    const myEvents = events.filter(e => e.creatorId === user.id || (e.participants && e.participants.includes(user.id)));
+    const monthsSinceJoin = user.joinedAt ? Math.floor((Date.now() - new Date(user.joinedAt).getTime()) / (30 * 24 * 60 * 60 * 1000)) : 0;
+
+    const badges = [
+      { emoji: '🏁', name: 'İlk Sürüş', earned: (user.totalRides || 0) >= 1 },
+      { emoji: '🗺️', name: 'Yol Kəşfçisi', earned: (user.totalKm || 0) >= 100 },
+      { emoji: '🏆', name: 'Maraton', earned: (user.totalKm || 0) >= 1000 },
+      { emoji: '🦋', name: 'Sosial', earned: friends.length >= 5 },
+      { emoji: '🎪', name: 'Tədbir Ustası', earned: myEvents.length >= 5 },
+      { emoji: '⭐', name: 'Veteran', earned: monthsSinceJoin >= 6 }
+    ];
+
+    container.innerHTML = badges.map(b =>
+      `<div class="p-badge ${b.earned ? 'earned' : 'locked'}"><span class="p-badge-emoji">${b.emoji}</span>${b.name}</div>`
+    ).join('');
+  },
+
+  renderRideHistory(user) {
+    const container = document.getElementById('ride-history-list');
+    if (!container) return;
+
+    const rides = user.rideHistory || [];
+    if (!rides.length) {
+      container.innerHTML = '<div class="p-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><p>Hələ sürüş tarixçəniz yoxdur</p></div>';
+      return;
+    }
+
+    container.innerHTML = rides.slice(0, 5).map(r =>
+      `<div class="p-ride-item">
+        <div class="p-ride-dot"></div>
+        <div class="p-ride-info">
+          <div class="p-ride-route">${r.route || '—'}</div>
+          <div class="p-ride-meta">${r.date || '—'} • ${r.duration || 0} dəq</div>
+        </div>
+        <div class="p-ride-km">${r.distance || 0} km</div>
+      </div>`
+    ).join('');
+  },
+
+  setupProfileEdit(user) {
+    const editBtn = document.getElementById('profile-edit-btn');
+    if (!editBtn || editBtn._bound) return;
+    editBtn._bound = true;
+
+    editBtn.addEventListener('click', () => {
+      const html = `
+        <div class="p-edit-form">
+          <div class="p-edit-row">
+            <div class="p-edit-group"><label class="p-edit-label">Ad</label><input class="p-edit-input" id="edit-firstname" value="${user.firstName || ''}"></div>
+            <div class="p-edit-group"><label class="p-edit-label">Soyad</label><input class="p-edit-input" id="edit-lastname" value="${user.lastName || ''}"></div>
+          </div>
+          <div class="p-edit-group"><label class="p-edit-label">Bio</label><input class="p-edit-input" id="edit-bio" value="${user.bio || ''}" placeholder="Özün haqqında bir az yaz..."></div>
+          <div class="p-edit-group"><label class="p-edit-label">Telefon</label><input class="p-edit-input" id="edit-phone" value="${user.phone || ''}"></div>
+          <div class="p-edit-row">
+            <div class="p-edit-group"><label class="p-edit-label">Moto Markası</label><input class="p-edit-input" id="edit-brand" value="${user.motoBrand || ''}"></div>
+            <div class="p-edit-group"><label class="p-edit-label">Model</label><input class="p-edit-input" id="edit-model" value="${user.motoModel || ''}"></div>
+          </div>
+          <div class="p-edit-group"><label class="p-edit-label">Kubatur (CC)</label><input class="p-edit-input" id="edit-cc" type="number" value="${user.motoCC || user.motoCc || ''}"></div>
+          <button class="p-edit-save" id="edit-save-btn">Yadda Saxla</button>
+        </div>
+      `;
+
+      this.openModal(html, 'Profili Redaktə et');
+
+      setTimeout(() => {
+        const saveBtn = document.getElementById('edit-save-btn');
+        if (saveBtn) {
+          saveBtn.addEventListener('click', () => {
+            const updates = {
+              firstName: document.getElementById('edit-firstname').value.trim(),
+              lastName: document.getElementById('edit-lastname').value.trim(),
+              bio: document.getElementById('edit-bio').value.trim(),
+              phone: document.getElementById('edit-phone').value.trim(),
+              motoBrand: document.getElementById('edit-brand').value.trim(),
+              motoModel: document.getElementById('edit-model').value.trim(),
+              motoCC: parseInt(document.getElementById('edit-cc').value) || 0
+            };
+
+            MotoStorage.updateUser(user.id, updates);
+            MotoNotifications.show('Profil yeniləndi! ✅', 'success');
+            this.closeModal();
+            this.updateProfile();
+          });
+        }
+      }, 100);
+    });
   },
 
   /* ──────────────────────────────────────────────
@@ -212,6 +332,12 @@ const MotoApp = {
     this.currentPage = actualPage;
     this.updateBottomNav(page);
 
+    // Show/hide bottom nav (hidden for admin page)
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (bottomNav && actualPage !== 'admin') {
+      bottomNav.style.display = '';
+    }
+
     // Run per-page hooks
     switch (actualPage) {
       case 'map':
@@ -235,6 +361,17 @@ const MotoApp = {
         break;
       case 'profile':
         this.updateProfile();
+        break;
+      case 'admin':
+        if (typeof MotoAdmin !== 'undefined' && MotoAdmin.isAdmin()) {
+          MotoAdmin.init();
+          // Hide bottom nav on admin page
+          const bottomNav = document.querySelector('.bottom-nav');
+          if (bottomNav) bottomNav.style.display = 'none';
+        } else {
+          this.navigateTo('profile');
+          return;
+        }
         break;
     }
   },

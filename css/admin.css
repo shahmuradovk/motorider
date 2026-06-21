@@ -1,0 +1,311 @@
+/* ═══════════════════════════════════════════════════════
+   ADMIN PANEL — MotoRiders
+   Dashboard, User/Event/Alert Management
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Admin Header ── */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.admin-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.admin-back:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+}
+
+.admin-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.admin-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #ff6b35;
+  background: rgba(255,107,53,0.12);
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+
+/* ── Dashboard Stats ── */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.admin-stat {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.2s;
+}
+
+.admin-stat:hover {
+  border-color: rgba(255,255,255,0.12);
+}
+
+.admin-stat-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.admin-stat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.admin-stat-label {
+  font-size: 0.72rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 3px;
+}
+
+
+/* ── Admin Tabs ── */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.admin-tab {
+  flex: 1;
+  padding: 10px 6px;
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #666;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.admin-tab:hover {
+  color: #999;
+}
+
+.admin-tab.active {
+  color: #fff;
+  background: rgba(255,107,53,0.15);
+}
+
+
+/* ── Admin Content Area ── */
+.admin-content {
+  min-height: 200px;
+}
+
+
+/* ── Admin Table/List ── */
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.admin-list-item:hover {
+  border-color: rgba(255,255,255,0.1);
+}
+
+.admin-list-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-list-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.admin-list-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-list-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-list-meta {
+  font-size: 0.72rem;
+  color: #666;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-list-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.admin-btn-sm {
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.admin-btn-danger {
+  color: #ff4444;
+  background: rgba(255,68,68,0.1);
+}
+
+.admin-btn-danger:hover {
+  background: rgba(255,68,68,0.2);
+}
+
+.admin-btn-info {
+  color: #3b82f6;
+  background: rgba(59,130,246,0.1);
+}
+
+.admin-btn-info:hover {
+  background: rgba(59,130,246,0.2);
+}
+
+.admin-role-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.admin-role-badge.role-admin {
+  color: #ff6b35;
+  background: rgba(255,107,53,0.12);
+}
+
+.admin-role-badge.role-user {
+  color: #666;
+  background: rgba(255,255,255,0.05);
+}
+
+
+/* ── System Section ── */
+.admin-system-section {
+  margin-bottom: 16px;
+}
+
+.admin-system-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.admin-system-label {
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.admin-system-value {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+
+/* ── Empty State ── */
+.admin-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+
+/* ── Responsive ── */
+@media (min-width: 500px) {
+  .admin-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
