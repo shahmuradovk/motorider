@@ -411,7 +411,7 @@ const MotoAuth = {
       emailDisplay.textContent = email;
     }
 
-    // Send real email via API
+    // Send verification email via Resend API
     fetch('/.netlify/functions/send-verification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -420,21 +420,15 @@ const MotoAuth = {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        if (typeof MotoNotifications !== 'undefined') {
-          MotoNotifications.show('📧 Təsdiq kodu emailinizə göndərildi!', 'success', 5000);
-        }
+        MotoApp.showToast('📧 Təsdiq kodu emailinizə göndərildi!', 'success');
       } else {
-        console.error('Email göndərmə xətası:', data.error);
-        if (typeof MotoNotifications !== 'undefined') {
-          MotoNotifications.show('⚠️ Email göndərilə bilmədi. Kod: ' + this.verificationCode, 'warning', 15000);
-        }
+        console.error('Email error:', data.error);
+        MotoApp.showToast('🔐 Kod: ' + this.verificationCode, 'warning');
       }
     })
     .catch(err => {
-      console.error('Email API xətası:', err);
-      if (typeof MotoNotifications !== 'undefined') {
-        MotoNotifications.show('⚠️ Email göndərilə bilmədi. Kod: ' + this.verificationCode, 'warning', 15000);
-      }
+      console.error('Email API error:', err);
+      MotoApp.showToast('🔐 Kod: ' + this.verificationCode, 'warning');
     });
 
     // Start resend timer
