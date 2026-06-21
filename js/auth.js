@@ -94,7 +94,7 @@ const MotoAuth = {
     const demoBtn = document.getElementById('demo-login-btn');
     if (demoBtn) {
       demoBtn.addEventListener('click', () => {
-        this.handleLogin('eli@motoriders.az', 'demo123');
+        this.handleLogin('shahmuradovk@gmail.com', '123456');
       });
     }
   },
