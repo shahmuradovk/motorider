@@ -50,6 +50,11 @@ const MotoMap = {
         this.DEFAULT_ZOOM
       );
     });
+
+    /* Auto-refresh online riders every 15 seconds from cloud */
+    if (this._locationInterval) clearInterval(this._locationInterval);
+    this._locationInterval = setInterval(() => this.loadActiveLocations(), 15000);
+
     console.log('🗺️ MotoMap: init tamamlandı');
   },
 
@@ -673,19 +678,22 @@ const MotoMap = {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      if (typeof MotoStorage !== 'undefined') {
-        const user = MotoStorage.getCurrentUser();
-        if (user) {
-          MotoStorage.shareLocation({
-            userId: user.id,
-            name: this.safeDisplayName(user),
-            lat, lng,
-            message: message || '',
-            mode: shareMode || 'friends',
-            timestamp: Date.now(),
-          });
-        }
+      const user = typeof MotoStorage !== 'undefined' ? MotoStorage.getCurrentUser() : null;
+      const userId = user ? user.id : 'anon_' + Date.now();
+      const name = user ? this.safeDisplayName(user) : 'Sürücü';
+
+      /* Save to localStorage */
+      if (typeof MotoStorage !== 'undefined' && user) {
+        MotoStorage.shareLocation({ userId: user.id, name, lat, lng, message: message || '', mode: shareMode || 'community', timestamp: Date.now() });
       }
+
+      /* Save to cloud DB */
+      fetch('/api/locations-share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, lat, lng, name, message: message || '', shareMode: shareMode || 'community', isRiding: false })
+      }).catch(err => console.warn('Cloud share error:', err));
+
       this.updateUserMarker(lat, lng);
       this.map.setView([lat, lng], 15, { animate: true });
       MotoApp.showToast('Yeriniz paylaşıldı! 📍', 'success');
@@ -853,21 +861,49 @@ const MotoMap = {
   loadActiveLocations() {
     Object.keys(this.markers).forEach((id) => this.removeUserMarker(id));
 
+    const currentUser = typeof MotoStorage !== 'undefined' ? MotoStorage.getCurrentUser() : null;
+    const myId = currentUser ? currentUser.id : '';
+
+    /* Try cloud API first */
+    fetch('/api/locations-active')
+      .then(r => r.json())
+      .then(data => {
+        if (data.locations && data.locations.length > 0) {
+          data.locations.forEach(loc => {
+            const uid = loc.user_id || loc.userId;
+            if (uid !== myId && !this.markers[uid]) {
+              const name = [loc.first_name, loc.last_name].filter(Boolean).join(' ') || loc.name || 'Sürücü';
+              this.addUserMarker({
+                id: uid,
+                name: name,
+                coords: [loc.lat, loc.lng],
+                status: loc.is_riding ? 'riding' : 'online',
+                moto: [loc.moto_brand, loc.moto_model].filter(Boolean).join(' '),
+              });
+            }
+          });
+          this.updateRidersOnline();
+          return;
+        }
+        /* Empty cloud — try localStorage */
+        this._loadLocalLocations(myId);
+      })
+      .catch(() => {
+        /* API offline — use localStorage */
+        this._loadLocalLocations(myId);
+      });
+  },
+
+  _loadLocalLocations(myId) {
     if (typeof MotoStorage !== 'undefined' && MotoStorage.getSharedLocations) {
       const shared = MotoStorage.getSharedLocations() || [];
-      const currentUser = MotoStorage.getCurrentUser();
-      const myId = currentUser ? currentUser.id : '';
-
-      shared.forEach((loc) => {
+      shared.forEach(loc => {
         if (loc.userId !== myId && !this.markers[loc.userId]) {
           this.addUserMarker({
             id: loc.userId,
             name: loc.name || 'Sürücü',
             coords: [loc.lat, loc.lng],
             status: 'online',
-            avatar: '🏍️',
-            moto: '',
-            color: '#22c55e',
           });
         }
       });
