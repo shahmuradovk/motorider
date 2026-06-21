@@ -21,81 +21,8 @@ const MotoMap = {
   BAKU_CENTER: [40.4093, 49.8671],
   DEFAULT_ZOOM: 13,
 
-  /* Demo users at Baku landmarks */
-  DEMO_USERS: [
-    {
-      id: 'demo_1',
-      name: 'Rəşad',
-      moto: 'Honda CB650R',
-      avatar: '🧔',
-      coords: [40.3594, 49.8214],
-      status: 'riding',
-      color: '#ff6b35',
-    },
-    {
-      id: 'demo_2',
-      name: 'Nicat',
-      moto: 'Yamaha MT-07',
-      avatar: '👨',
-      coords: [40.3663, 49.8372],
-      status: 'online',
-      color: '#22c55e',
-    },
-    {
-      id: 'demo_3',
-      name: 'Elvin',
-      moto: 'Kawasaki Z900',
-      avatar: '🧑',
-      coords: [40.3616, 49.8445],
-      status: 'riding',
-      color: '#ff6b35',
-    },
-    {
-      id: 'demo_4',
-      name: 'Tural',
-      moto: 'BMW R1250GS',
-      avatar: '👦',
-      coords: [40.4097, 49.8672],
-      status: 'online',
-      color: '#22c55e',
-    },
-    {
-      id: 'demo_5',
-      name: 'Sənan',
-      moto: 'Ducati Monster',
-      avatar: '🧔‍♂️',
-      coords: [40.3761, 49.8445],
-      status: 'riding',
-      color: '#ff6b35',
-    },
-    {
-      id: 'demo_6',
-      name: 'Kamran',
-      moto: 'KTM Duke 390',
-      avatar: '👤',
-      coords: [40.3873, 49.858],
-      status: 'offline',
-      color: '#6b7280',
-    },
-    {
-      id: 'demo_7',
-      name: 'Vüqar',
-      moto: 'Suzuki GSX-R',
-      avatar: '🙎‍♂️',
-      coords: [40.4143, 49.8747],
-      status: 'online',
-      color: '#22c55e',
-    },
-    {
-      id: 'demo_8',
-      name: 'Əli',
-      moto: 'Harley Iron 883',
-      avatar: '🧑‍🦱',
-      coords: [40.3567, 49.8394],
-      status: 'riding',
-      color: '#ff6b35',
-    },
-  ],
+  /* No hardcoded demo users — map shows real shared locations only */
+  DEMO_USERS: [],
 
   /* ──────────────────────────────────────────────
      INIT
@@ -859,6 +786,7 @@ const MotoMap = {
      DEMO ANIMATION (simulate moving users)
   ────────────────────────────────────────────── */
   startDemoAnimation() {
+    if (!this.DEMO_USERS.length) return; // No demo users to animate
     const offsets = this.DEMO_USERS.map(() => ({
       latOff: 0,
       lngOff: 0,

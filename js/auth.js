@@ -236,18 +236,20 @@ const MotoAuth = {
     }
 
     // Button visibility
-    prevBtn.style.visibility = this.currentStep === 1 ? 'hidden' : 'visible';
+    if (prevBtn) prevBtn.style.visibility = this.currentStep === 1 ? 'hidden' : 'visible';
 
-    if (this.currentStep === this.totalSteps) {
-      nextBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        Tamamla
-      `;
-    } else {
-      nextBtn.innerHTML = `
-        İrəli
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      `;
+    if (nextBtn) {
+      if (this.currentStep === this.totalSteps) {
+        nextBtn.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Tamamla
+        `;
+      } else {
+        nextBtn.innerHTML = `
+          İrəli
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        `;
+      }
     }
   },
 
@@ -527,20 +529,20 @@ const MotoAuth = {
     const timerEl = document.getElementById('resend-timer');
     let remaining = seconds;
 
-    resendBtn.disabled = true;
+    if (resendBtn) resendBtn.disabled = true;
 
     if (this.resendTimerInterval) clearInterval(this.resendTimerInterval);
 
-    timerEl.textContent = `(${remaining}s)`;
+    if (timerEl) timerEl.textContent = `(${remaining}s)`;
 
     this.resendTimerInterval = setInterval(() => {
       remaining--;
-      timerEl.textContent = `(${remaining}s)`;
+      if (timerEl) timerEl.textContent = `(${remaining}s)`;
 
       if (remaining <= 0) {
         clearInterval(this.resendTimerInterval);
-        resendBtn.disabled = false;
-        timerEl.textContent = '';
+        if (resendBtn) resendBtn.disabled = false;
+        if (timerEl) timerEl.textContent = '';
       }
     }, 1000);
   },

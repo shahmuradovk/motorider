@@ -299,7 +299,7 @@ const MotoApp = {
             };
 
             MotoStorage.updateUser(user.id, updates);
-            MotoNotifications.show('Profil yeniləndi! ✅', 'success');
+            if (typeof MotoNotifications !== 'undefined') MotoNotifications.show('Profil yeniləndi! ✅', 'success');
             this.closeModal();
             this.updateProfile();
           });
