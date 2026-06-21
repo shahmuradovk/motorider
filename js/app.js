@@ -71,11 +71,10 @@ const MotoApp = {
   hideSplash() {
     const splash = document.getElementById('splash-screen');
     if (splash) {
-      splash.style.opacity = '0';
-      splash.style.transition = 'opacity 0.6s ease';
+      splash.classList.add('fade-out');
       setTimeout(() => {
         splash.style.display = 'none';
-      }, 600);
+      }, 700);
     }
   },
 
