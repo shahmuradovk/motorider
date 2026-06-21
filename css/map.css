@@ -1237,7 +1237,7 @@
 /* ──────────────── Online Riders Count Overlay ──────────────── */
 .riders-online {
   position: absolute;
-  top: calc(var(--space-4) + 56px);
+  top: var(--space-4);
   left: var(--space-4);
   display: flex;
   align-items: center;
