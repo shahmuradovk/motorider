@@ -404,6 +404,12 @@ const MotoApp = {
      SETUP HEADER
   ────────────────────────────────────────────── */
   setupHeader() {
+    // Brand logo -> navigate to map (home)
+    const brandLink = document.getElementById('header-brand-link');
+    if (brandLink) {
+      brandLink.addEventListener('click', () => this.navigateTo('map'));
+    }
+
     // Profile button -> navigate to profile
     const profileBtn = document.getElementById('header-profile-btn');
     if (profileBtn) {
